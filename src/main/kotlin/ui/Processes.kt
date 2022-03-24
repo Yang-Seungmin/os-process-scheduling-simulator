@@ -161,8 +161,8 @@ fun ProcessAddScreen(
     onProcessAdd: (Process) -> Unit
 ) {
     val processName = rememberSaveable { mutableStateOf("") }
-    val arrivalTime = rememberSaveable { mutableStateOf(0) }
-    val burstTime = rememberSaveable { mutableStateOf(1) }
+    val arrivalTime = rememberSaveable { mutableStateOf("0") }
+    val burstTime = rememberSaveable { mutableStateOf("1") }
 
     Column {
 
@@ -197,8 +197,8 @@ fun ProcessAddScreen(
                     color = MaterialTheme.colors.onBackground,
                     shape = MaterialTheme.shapes.medium)
                 .padding(4.dp),
-            value = arrivalTime.value.toString(),
-            onValueChange = { arrivalTime.value = it.toIntOrNull() ?: 0 },
+            value = arrivalTime.value,
+            onValueChange = { arrivalTime.value = it },
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next,
                 keyboardType = KeyboardType.Number
@@ -217,8 +217,8 @@ fun ProcessAddScreen(
                     color = MaterialTheme.colors.onBackground,
                     shape = MaterialTheme.shapes.medium)
                 .padding(4.dp),
-            value = burstTime.value.toString(),
-            onValueChange = { burstTime.value = it.toIntOrNull() ?: 0 },
+            value = burstTime.value,
+            onValueChange = { burstTime.value = it },
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next,
                 keyboardType = KeyboardType.Number
@@ -234,12 +234,15 @@ fun ProcessAddScreen(
                     Process(
                         pid = processesCount + 1,
                         processName = processName.value,
-                        arrivalTime = arrivalTime.value,
-                        burstTime = burstTime.value
+                        arrivalTime = arrivalTime.value.toIntOrNull() ?: 0,
+                        burstTime = burstTime.value.toIntOrNull() ?: 1
                     )
                 )
             },
-            enabled = processName.value.isNotBlank() && arrivalTime.value >= 0 && burstTime.value >= 1
+            enabled =
+            processName.value.isNotBlank()
+                    && (arrivalTime.value.toIntOrNull() ?: -1) >= 0
+                    && (burstTime.value.toIntOrNull() ?: -1) >= 1
         )
     }
 }
