@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import items.Process
 import processColors
 
+var processColorCount = 0
+
 @Composable
 fun ProcessesScreen(
     processes: List<Process>,
@@ -42,7 +44,7 @@ fun ProcessesScreen(
                 ProcessesHeader()
                 LazyColumn {
                     items(processes.size) { index ->
-                        ProcessItem(processes[index], processColors[index % processColors.size], onProcessDelete)
+                        ProcessItem(processes[index], Color(processColors[index % processColors.size]), onProcessDelete)
                     }
 
                     if(10 - processes.size > 0) {
@@ -235,7 +237,8 @@ fun ProcessAddScreen(
                         pid = processesCount + 1,
                         processName = processName.value,
                         arrivalTime = arrivalTime.value.toIntOrNull() ?: 0,
-                        burstTime = burstTime.value.toIntOrNull() ?: 1
+                        burstTime = burstTime.value.toIntOrNull() ?: 1,
+                        processColor = processColors[processColorCount++ % processColors.size]
                     )
                 )
             },
