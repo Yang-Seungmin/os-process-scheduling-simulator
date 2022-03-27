@@ -83,7 +83,7 @@ fun GanttChartArrivalBar(
                 .height(24.dp)
         ) {
             processes.forEachIndexed { i, _ ->
-                if (scrollAmount < accumulation.toPx() * (processes[i].arrivalTime))
+                if (scrollAmount <= accumulation.toPx() * (processes[i].arrivalTime))
                     Box(
                         modifier = Modifier.height(24.dp)
                             .padding(start = accumulation * (processes[i].arrivalTime) - scrollAmount.toDp()),
@@ -143,7 +143,7 @@ fun GanttChartBar(
         ) {
             ganttChartItems.forEachIndexed { i, ganttChartItem ->
                 if (ganttChartItem.coreNumber == coreNumber) {
-                    if(scrollAmount.toDp() < accumulation * (ganttChartItem.time.last)) {
+                    if(scrollAmount.toDp() <= accumulation * (ganttChartItem.time.last)) {
                         val padding = accumulation * ganttChartItem.time.first
 
                         Box(
