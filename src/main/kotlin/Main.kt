@@ -12,9 +12,8 @@ fun main() = application {
         title = "OS Process Scheduling Simulator",
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(
-            size = DpSize(1280.dp, 920.dp)
-        ),
-        resizable = false
+            size = DpSize(1280.dp, 720.dp)
+        )
     ) {
         MainScreen()
     }

@@ -1,11 +1,11 @@
 package ui
 
+import algorithm.SchedulingAlgorithm
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Slider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -17,8 +17,9 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AlgorithmList(
     modifier: Modifier = Modifier,
-    dropdownItem: String,
-    onDropdownSelected: (String) -> Unit
+    algorithms: List<SchedulingAlgorithm>,
+    selectedAlgorithm: SchedulingAlgorithm,
+    onDropdownSelected: (SchedulingAlgorithm) -> Unit
 ) {
     val expanded = remember { mutableStateOf(false) }
 
@@ -29,7 +30,7 @@ fun AlgorithmList(
             modifier = Modifier.fillMaxWidth().clickable {
                 expanded.value = true
             }.padding(8.dp),
-            text = "$dropdownItem  ▾",
+            text = "${selectedAlgorithm.algorithmName}  ▾",
             textAlign = TextAlign.End
         )
 
@@ -37,16 +38,14 @@ fun AlgorithmList(
             expanded = expanded.value,
             onDismissRequest = { expanded.value = false }
         ) {
-            listOf(
-                "FCFS", "RR"
-            ).forEach {
+            algorithms.forEach {
                 DropdownMenuItem(
                     onClick = {
                         onDropdownSelected(it)
                         expanded.value = false
                     }
                 ) {
-                    Text(it)
+                    Text(it.algorithmName)
                 }
             }
         }

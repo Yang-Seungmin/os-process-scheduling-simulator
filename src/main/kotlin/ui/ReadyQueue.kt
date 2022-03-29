@@ -16,9 +16,9 @@ import items.Process
 import items.Processor
 
 @Composable
-fun ReadyQueue(
+fun PerCoreReadyQueue(
     processors: List<Processor?>,
-    readyQueues: List<Collection<Process>>
+    readyQueues: List<List<Process>>
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 8.dp)
@@ -44,7 +44,33 @@ fun ReadyQueue(
                 textAlign = TextAlign.End
             )
         }
+    }
+}
 
+@Composable
+fun SingleReadyQueue(
+    readyQueue: List<Process>
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 8.dp)
+    ) {
+        SingleReadyQueueBar(
+            processes = readyQueue
+        )
+
+        Box {
+            Text(
+                modifier = Modifier.padding(start = 0.dp),
+                text = "First",
+                style = MaterialTheme.typography.caption
+            )
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Last",
+                style = MaterialTheme.typography.caption,
+                textAlign = TextAlign.End
+            )
+        }
     }
 }
 
@@ -74,6 +100,31 @@ fun ReadyQueueBar(
                 )
             }
         }
+        items(processes.size) { i ->
+            Box(
+                modifier = Modifier.height(24.dp)
+                    .defaultMinSize(minWidth = 24.dp)
+                    .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                    .background(Color(processes[i].processColor))
+                    .padding(horizontal = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = processes[i].processName)
+            }
+        }
+    }
+}
+
+@Composable
+fun SingleReadyQueueBar(
+    processes: List<Process>
+) {
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+            .height(24.dp)
+    ) {
         items(processes.size) { i ->
             Box(
                 modifier = Modifier.height(24.dp)
