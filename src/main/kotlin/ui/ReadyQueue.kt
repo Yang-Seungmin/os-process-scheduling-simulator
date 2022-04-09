@@ -13,20 +13,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import items.Process
-import items.Processor
+import items.Core
 
 @Composable
 fun PerCoreReadyQueue(
-    processors: List<Processor?>,
+    cores: List<Core?>,
     readyQueues: List<List<Process>>
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 8.dp)
     ) {
-        processors.forEachIndexed { i, processor ->
+        cores.forEachIndexed { i, processor ->
             ReadyQueueBar(
                 coreNumber = i,
-                processor = processor,
+                core = processor,
                 processes = readyQueues[i].toList()
             )
         }
@@ -77,7 +77,7 @@ fun SingleReadyQueue(
 @Composable
 fun ReadyQueueBar(
     coreNumber: Int,
-    processor: Processor?,
+    core: Core?,
     processes: List<Process>
 ) {
     LazyRow(
@@ -95,8 +95,8 @@ fun ReadyQueueBar(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Core $coreNumber [${processor?.name ?: "OFF"}]",
-                    color = if (processor == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground
+                    text = "Core $coreNumber [${core?.name ?: "OFF"}]",
+                    color = if (core == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground
                 )
             }
         }

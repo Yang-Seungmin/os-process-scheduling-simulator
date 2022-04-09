@@ -2,14 +2,12 @@ package ui
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,16 +16,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import items.GanttChartItem
-import items.Processor
+import items.Core
 import items.range
-import kotlinx.coroutines.launch
 import util.toDp
 import util.toPx
 
 @Composable
 fun GanttChart(
     accumulation: Dp,
-    processors: List<Processor?>,
+    cores: List<Core?>,
     processes: List<items.Process>,
     ganttChartItems: List<GanttChartItem>
 ) {
@@ -41,7 +38,7 @@ fun GanttChart(
             processes,
             state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
         )
-        processors.forEachIndexed { i, processor ->
+        cores.forEachIndexed { i, processor ->
             GanttChartBar(
                 accumulation,
                 processor,
@@ -112,7 +109,7 @@ fun GanttChartArrivalBar(
 @Composable
 fun GanttChartBar(
     accumulation: Dp,
-    processor: Processor?,
+    core: Core?,
     coreNumber: Int,
     ganttChartItems: List<GanttChartItem>,
     scrollAmount: Float
@@ -130,8 +127,8 @@ fun GanttChartBar(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Core $coreNumber [${processor?.name ?: "OFF"}]",
-                color = if (processor == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground,
+                text = "Core $coreNumber [${core?.name ?: "OFF"}]",
+                color = if (core == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground,
                 maxLines = 1
             )
         }

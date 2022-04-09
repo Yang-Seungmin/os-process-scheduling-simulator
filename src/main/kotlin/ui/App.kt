@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import items.ExecuteResult
 import items.GanttChartItem
 import items.Process
-import items.Processor
+import items.Core
 import processColors
 
 @Composable
@@ -37,53 +37,25 @@ fun MainScreen() {
             )
         )
     }
-    val processors = rememberSaveable {
-        mutableStateListOf<Processor?>(Processor.PCore, Processor.PCore, Processor.ECore, Processor.ECore)
+    val cores = rememberSaveable {
+        mutableStateListOf<Core?>(Core.PCore(), Core.PCore(), Core.ECore(), Core.ECore())
     }
     val readyQueue = rememberSaveable {
         mutableStateListOf<List<Process>>(
             mutableListOf(),
-            mutableListOf(
-                Process(
-                    pid = 1,
-                    processName = "adf",
-                    arrivalTime = 1,
-                    burstTime = 2,
-                    processColor = processColors[1]
-                )
-            ),
+            mutableListOf(),
             mutableListOf(),
             mutableListOf()
         )
     }
     val singleReadyQueue = rememberSaveable {
-        mutableStateListOf<Process>(
-            Process(
-                pid = 1,
-                processName = "adf",
-                arrivalTime = 1,
-                burstTime = 2,
-                processColor = processColors[1]
-            )
-        )
+        mutableStateListOf<Process>()
     }
     val ganttChart = rememberSaveable {
-        listOf<GanttChartItem>(
-            GanttChartItem(
-                process = processes[0],
-                coreNumber = 1,
-                time = 2..6
-            )
-        )
+        listOf<GanttChartItem>()
     }
     val executeResult = rememberSaveable {
-        listOf<ExecuteResult>(
-            ExecuteResult(
-                processes[0],
-                4,
-                12
-            )
-        )
+        listOf<ExecuteResult>()
     }
 
     val algorithms = listOf<SchedulingAlgorithm>(
@@ -176,9 +148,9 @@ fun MainScreen() {
                         )
 
                         ProcessorsScreen(
-                            processors = processors,
+                            cores = cores,
                             onProcessorChange = { i, processor ->
-                                processors[i] = processor
+                                cores[i] = processor
                             }
                         )
                     }
@@ -193,7 +165,7 @@ fun MainScreen() {
 
                     if (this) {
                         PerCoreReadyQueue(
-                            processors = processors,
+                            cores = cores,
                             readyQueues = readyQueue
                         )
                     } else {
@@ -210,7 +182,7 @@ fun MainScreen() {
                 GanttChart(
                     accumulation = 20.dp,
                     processes = processes,
-                    processors = processors,
+                    cores = cores,
                     ganttChartItems = ganttChart
                 )
 

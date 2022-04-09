@@ -1,22 +1,21 @@
 package items
 
-import androidx.compose.runtime.saveable.listSaver
-import androidx.compose.runtime.saveable.mapSaver
-
-sealed class Processor(
+sealed class Core(
     val name: String,
     val processingPowerPerSecond: Int,
     val powerConsumption: Double,
-    val idlePowerConsumption: Double
+    val idlePowerConsumption: Double,
+
+    var process: items.Process? = null
 ) {
-    object PCore : Processor(
+    class PCore : Core(
         name = "P-Core",
         processingPowerPerSecond = 2,
         powerConsumption = 3.0,
         idlePowerConsumption = 0.1
     )
 
-    object ECore : Processor(
+    class ECore : Core(
         name = "E-Core",
         processingPowerPerSecond = 1,
         powerConsumption = 1.0,
