@@ -18,7 +18,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import items.Process
+import jdk.jfr.Enabled
+import model.Process
 import processColors
 
 var processColorCount = 0
@@ -26,6 +27,7 @@ var processColorCount = 0
 @Composable
 fun ProcessesScreen(
     processes: List<Process>,
+    enabled: Boolean,
     onProcessAdd: (Process) -> Unit,
     onProcessDelete: (Process) -> Unit
 ) {
@@ -44,12 +46,12 @@ fun ProcessesScreen(
                 ProcessesHeader()
                 LazyColumn {
                     items(processes.size) { index ->
-                        ProcessItem(processes[index], Color(processColors[index % processColors.size]), onProcessDelete)
+                        ProcessItem(processes[index], onProcessDelete)
                     }
 
                     if(10 - processes.size > 0) {
                         items(10 - processes.size) {
-                            ProcessNullItem()
+                            DummyProcessItem()
                         }
                     }
                 }
@@ -61,7 +63,7 @@ fun ProcessesScreen(
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
-            ProcessAddScreen(processes.size, onProcessAdd)
+            ProcessAddScreen(processes.size, enabled, onProcessAdd)
         }
     }
 
@@ -98,7 +100,6 @@ fun ProcessesHeader() {
 @Composable
 fun ProcessItem(
     process: Process,
-    backgroundColor: Color,
     onItemClick: (Process) -> Unit
 ) {
     Row(
@@ -117,7 +118,7 @@ fun ProcessItem(
             forEach {
                 Box(
                     modifier = Modifier.weight(1f / this.size)
-                        .background(backgroundColor)
+                        .background(Color(process.processColor))
                         .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
                 ) {
                     Text(
@@ -132,7 +133,7 @@ fun ProcessItem(
 }
 
 @Composable
-fun ProcessNullItem(
+fun DummyProcessItem(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth()
@@ -160,6 +161,7 @@ fun ProcessNullItem(
 @Composable
 fun ProcessAddScreen(
     processesCount: Int,
+    enabled: Boolean,
     onProcessAdd: (Process) -> Unit
 ) {
     val processName = rememberSaveable { mutableStateOf("") }
@@ -246,6 +248,7 @@ fun ProcessAddScreen(
             processName.value.isNotBlank()
                     && (arrivalTime.value.toIntOrNull() ?: -1) >= 0
                     && (burstTime.value.toIntOrNull() ?: -1) >= 1
+                    && enabled
         )
     }
 }

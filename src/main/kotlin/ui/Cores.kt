@@ -11,25 +11,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import items.Core
+import model.Core
+import kotlin.math.roundToInt
 
 @Composable
-fun ProcessorsScreen(
+fun CoresScreen(
     modifier: Modifier = Modifier,
     cores: List<Core?>,
+    enabled: Boolean,
+    totalPowerConsumptions: Map<Core, Double>,
     onProcessorChange: (Int, Core?) -> Unit
 ) {
     Row(
         modifier = modifier.fillMaxWidth()
     ) {
-        cores.forEachIndexed { index, value ->
-            ProcessorControlPanel(
+        cores.forEachIndexed { index, core ->
+            CoreControlPanel(
                 modifier = Modifier.weight(1f / cores.size),
-                core = value,
+                core = core,
                 coreNumber = index,
                 onProcessorChange = {
                     onProcessorChange(index, it)
-                }
+                },
+                totalPowerConsumption = totalPowerConsumptions[core] ?: 0.0,
+                enabled = enabled
             )
         }
     }
@@ -37,10 +42,12 @@ fun ProcessorsScreen(
 
 
 @Composable
-fun ProcessorControlPanel(
+fun CoreControlPanel(
     modifier: Modifier = Modifier,
+    enabled: Boolean,
     coreNumber: Int,
     core: Core?,
+    totalPowerConsumption: Double,
     onProcessorChange: (Core?) -> Unit
 ) {
     Column(
@@ -61,27 +68,47 @@ fun ProcessorControlPanel(
             fontWeight = FontWeight.Bold
         )
 
-        listOf(
-            "Off" to null,
-            "P-Core" to Core.PCore(),
-            "E-Core" to Core.ECore()
-        ).forEach {
+        listOf("OFF", "P-Core", "E-Core").forEach {
+            val opc = {
+                if (enabled) onProcessorChange(
+                    when (it) {
+                        "P-Core" -> Core.PCore("Core $coreNumber [${it}]")
+                        "E-Core" -> Core.ECore("Core $coreNumber [${it}]")
+                        else -> null
+                    },
+                )
+            }
+
             Row(
                 modifier = Modifier.selectable(
-                    selected = core == it.second,
-                    onClick = { onProcessorChange(it.second) }
+                    selected = (core?.name ?: "OFF") == it,
+                    onClick = opc
                 ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
-                    selected = core == it.second,
-                    onClick = { onProcessorChange(it.second) }
+                    enabled = enabled,
+                    selected = when (it) {
+                        "P-Core" -> core is Core.PCore
+                        "E-Core" -> core is Core.ECore
+                        else -> core == null
+                    },
+                    onClick = opc
                 )
 
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = it.first)
+                    text = it
+                )
             }
         }
+
+        Text(
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .padding(top = 8.dp),
+            text = "${(totalPowerConsumption * 10).roundToInt() / 10.0}W",
+            style = MaterialTheme.typography.caption
+        )
     }
 }

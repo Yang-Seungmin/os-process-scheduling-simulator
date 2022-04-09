@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import items.ExecuteResult
+import model.ExecuteResult
 
 @Composable
 fun ResultScreen(
@@ -35,9 +35,9 @@ fun ResultScreen(
                         ResultItem(results[index])
                     }
 
-                    if (10 - results.size > 0) {
-                        items(10 - results.size) {
-                            ResultNullItem()
+                    if (5 - results.size > 0) {
+                        items(5 - results.size) {
+                            DummyResultItem()
                         }
                     }
                 }
@@ -88,32 +88,35 @@ fun ResultItem(
             .height(IntrinsicSize.Min)
             .fillMaxSize()
     ) {
-        listOf(
-            executeResult.process.processName,
-            executeResult.process.arrivalTime.toString(),
-            executeResult.process.burstTime.toString(),
-            executeResult.waitingTime.toString(),
-            executeResult.turnaroundTime.toString(),
-            String.format("%.3f", executeResult.turnaroundTime / executeResult.process.burstTime.toDouble())
-        ).apply {
-            forEach {
-                Box(
-                    modifier = Modifier.weight(1f / this.size)
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
-                        text = it,
-                        textAlign = TextAlign.Center
-                    )
+        with(executeResult) {
+            listOf(
+                process.processName,
+                process.arrivalTime.toString(),
+                process.burstTime.toString(),
+                (turnaroundTime - process.burstTime).toString(),
+                turnaroundTime.toString(),
+                String.format("%.3f", executeResult.turnaroundTime / executeResult.process.burstTime.toDouble())
+            ).apply {
+                forEach {
+                    Box(
+                        modifier = Modifier.weight(1f / this.size)
+                            .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                    ) {
+                        Text(
+                            modifier = Modifier.fillMaxSize().padding(4.dp),
+                            text = it,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
+
     }
 }
 
 @Composable
-fun ResultNullItem() {
+fun DummyResultItem() {
     Row(
         modifier = Modifier.fillMaxWidth()
             .height(IntrinsicSize.Min)

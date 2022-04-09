@@ -15,18 +15,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
-import items.GanttChartItem
-import items.Core
-import items.range
+import model.GanttChartItem
+import model.Core
+import model.range
 import util.toDp
 import util.toPx
 
 @Composable
 fun GanttChart(
     accumulation: Dp,
-    cores: List<Core?>,
-    processes: List<items.Process>,
-    ganttChartItems: List<GanttChartItem>
+    processes: List<model.Process>,
+    ganttChartItems: Map<Core, List<GanttChartItem>>
 ) {
     val state = rememberLazyListState()
 
@@ -38,14 +37,13 @@ fun GanttChart(
             processes,
             state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
         )
-        cores.forEachIndexed { i, processor ->
-            GanttChartBar(
-                accumulation,
-                processor,
-                i,
-                ganttChartItems,
-                state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
-            )
+        ganttChartItems.entries.forEach { (core, list) ->
+                GanttChartBar(
+                    accumulation,
+                    core,
+                    list,
+                    state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
+                )
         }
         GanttChartScale(accumulation, state)
     }
@@ -54,7 +52,7 @@ fun GanttChart(
 @Composable
 fun GanttChartArrivalBar(
     accumulation: Dp,
-    processes: List<items.Process>,
+    processes: List<model.Process>,
     scrollAmount: Float
 ) {
     Row(
@@ -109,8 +107,7 @@ fun GanttChartArrivalBar(
 @Composable
 fun GanttChartBar(
     accumulation: Dp,
-    core: Core?,
-    coreNumber: Int,
+    core: Core,
     ganttChartItems: List<GanttChartItem>,
     scrollAmount: Float
 ) {
@@ -127,8 +124,8 @@ fun GanttChartBar(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Core $coreNumber [${core?.name ?: "OFF"}]",
-                color = if (core == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground,
+                text = "${core.name}",
+                color = if(core == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground,
                 maxLines = 1
             )
         }
@@ -139,26 +136,23 @@ fun GanttChartBar(
                 .height(24.dp)
         ) {
             ganttChartItems.forEachIndexed { i, ganttChartItem ->
-                if (ganttChartItem.coreNumber == coreNumber) {
-                    if(scrollAmount.toDp() <= accumulation * (ganttChartItem.time.last)) {
-                        val padding = accumulation * ganttChartItem.time.first
+                if (scrollAmount.toDp() <= accumulation * (ganttChartItem.time.last)) {
+                    val padding = accumulation * ganttChartItem.time.first
 
-                        Box(
-                            modifier = Modifier.height(24.dp)
-                                .padding(start = if(scrollAmount.toDp() < padding) padding - scrollAmount.toDp() else 0.dp)
-                                .width(accumulation * ganttChartItem.time.range() - if(scrollAmount.toDp() > padding) scrollAmount.toDp() - padding else 0.dp)
-                                .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
-                                .background(Color(ganttChartItem.process.processColor))
-                                .padding(horizontal = 4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = ganttChartItem.process.processName,
-                                maxLines = 1,
-                            )
-                        }
+                    Box(
+                        modifier = Modifier.height(24.dp)
+                            .padding(start = if (scrollAmount.toDp() < padding) padding - scrollAmount.toDp() else 0.dp)
+                            .width(accumulation * ganttChartItem.time.range() - if (scrollAmount.toDp() > padding) scrollAmount.toDp() - padding else 0.dp)
+                            .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                            .background(Color(ganttChartItem.process.processColor))
+                            .padding(horizontal = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = ganttChartItem.process.processName,
+                            maxLines = 1,
+                        )
                     }
-
                 }
             }
         }

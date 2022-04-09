@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import items.Process
-import items.Core
+import model.Process
+import model.Core
 
 @Composable
 fun PerCoreReadyQueue(
@@ -29,6 +29,51 @@ fun PerCoreReadyQueue(
                 core = processor,
                 processes = readyQueues[i].toList()
             )
+        }
+
+        Box {
+            Text(
+                modifier = Modifier.padding(start = 150.dp),
+                text = "First",
+                style = MaterialTheme.typography.caption
+            )
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Last",
+                style = MaterialTheme.typography.caption,
+                textAlign = TextAlign.End
+            )
+        }
+    }
+}
+
+@Composable
+fun ReadyQueueList(
+    readyQueues: List<List<Process>>
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 8.dp)
+    ) {
+        readyQueues.forEachIndexed { i, readyQueue ->
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                    .height(24.dp)
+            ) {
+                items(readyQueue.size) { i ->
+                    Box(
+                        modifier = Modifier.height(24.dp)
+                            .defaultMinSize(minWidth = 24.dp)
+                            .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                            .background(Color(readyQueue[i].processColor))
+                            .padding(horizontal = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = readyQueue[i].processName)
+                    }
+                }
+            }
         }
 
         Box {

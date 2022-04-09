@@ -3,12 +3,10 @@ package ui
 import algorithm.FCFS
 import algorithm.RR
 import algorithm.SchedulingAlgorithm
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -16,47 +14,42 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import items.ExecuteResult
-import items.GanttChartItem
-import items.Process
-import items.Core
-import processColors
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToStream
+import model.ExecuteResult
+import model.GanttChartItem
+import model.Process
+import model.Core
+import util.toGanttChart
+import java.io.File
+import java.io.FileReader
+import kotlin.math.pow
+
 
 @Composable
 @Preview
 fun MainScreen() {
-    val processes = rememberSaveable {
-        mutableStateListOf<Process>(
-            Process(
-                pid = 1,
-                processName = "adf",
-                arrivalTime = 1,
-                burstTime = 2,
-                processColor = processColors[1]
-            )
-        )
-    }
+    var isFileOpenerOpened by remember { mutableStateOf(false) }
+    var isFileSaverOpened by remember { mutableStateOf(false) }
+    var isRunning by remember { mutableStateOf(false) }
+    var accumulation by remember { mutableStateOf(20.dp) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val processes = rememberSaveable { mutableStateListOf<Process>() }
     val cores = rememberSaveable {
-        mutableStateListOf<Core?>(Core.PCore(), Core.PCore(), Core.ECore(), Core.ECore())
-    }
-    val readyQueue = rememberSaveable {
-        mutableStateListOf<List<Process>>(
-            mutableListOf(),
-            mutableListOf(),
-            mutableListOf(),
-            mutableListOf()
+        mutableStateListOf<Core?>(
+            Core.PCore("Core 0 [P-Core]"),
+            Core.PCore("Core 1 [P-Core]"),
+            Core.ECore("Core 2 [E-Core]"),
+            Core.ECore("Core 3 [E-Core]")
         )
     }
-    val singleReadyQueue = rememberSaveable {
-        mutableStateListOf<Process>()
-    }
-    val ganttChart = rememberSaveable {
-        listOf<GanttChartItem>()
-    }
-    val executeResult = rememberSaveable {
-        listOf<ExecuteResult>()
-    }
+
+    var uiState by remember { mutableStateOf(UiState.default()) }
 
     val algorithms = listOf<SchedulingAlgorithm>(
         FCFS(), RR()
@@ -67,28 +60,41 @@ fun MainScreen() {
     var rrQuantum by remember { mutableStateOf(2) }
 
     MaterialTheme {
+        if (isFileOpenerOpened) {
+            ProcessesJsonFileLoadDialog { dir, file ->
+                isFileOpenerOpened = false
+
+                if (file != null) {
+                    processes.clear()
+                    processes.addAll(Json.decodeFromStream<List<Process>>(File(dir, file).inputStream()))
+                    processColorCount = processes.size
+                }
+            }
+        }
+        if (isFileSaverOpened) {
+            ProcessesJsonFileSaveDialog { dir, file ->
+                isFileSaverOpened = false
+
+                if (file != null) {
+                    Json.encodeToStream(processes.toList(), File(dir, file).outputStream())
+                }
+            }
+        }
+
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) {
-                    Text(
-                        modifier = Modifier.padding(8.dp).alignByBaseline(),
-                        text = "OS Process Scheduling Simulator",
-                        style = MaterialTheme.typography.h4
-                    )
-
-                    Text(
-                        modifier = Modifier.alignByBaseline().padding(start = 4.dp),
-                        text = "1st Team v1.0"
-                    )
-
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                            .border(width = 1.dp, color = MaterialTheme.colors.secondary).padding(horizontal = 8.dp),
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(horizontal = 16.dp)
+                            .border(width = 1.dp, color = MaterialTheme.colors.primaryVariant)
+                            .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -105,14 +111,63 @@ fun MainScreen() {
                         }
 
                         Button(
-                            onClick = {}
+                            onClick = {
+                                if (isRunning) {
+                                    selectedAlgorithm.value.stop()
+                                    uiState = uiState.copy(time = "0s")
+                                    isRunning = selectedAlgorithm.value.isRunning
+                                } else {
+                                    isRunning = true
+                                    with(selectedAlgorithm.value) {
+                                        setCores(cores.filterNotNull())
+                                        setProcesses(processes)
+
+                                        runWithTimer(
+                                            coroutineScope,
+                                            onTimeElapsed = {
+                                                uiState = uiState.copy(
+                                                    totalPowerConsumptions = totalPowerConsumption,
+                                                    readyQueue = readyQueue,
+                                                    executeResult = endProcesses,
+                                                    time = "${time}s",
+                                                    ganttChartMap = processRecord.toGanttChart()
+                                                )
+                                            },
+                                            onEnd = {
+                                                uiState = uiState.copy(
+                                                    time = "${time}s (END)"
+                                                )
+                                                isRunning = false
+                                            }, 100
+                                        )
+                                    }
+                                }
+                            }
                         ) {
-                            Text("Run!")
+                            Text(if (isRunning) "STOP" else "RUN")
                         }
+
+                        Text(
+                            text = "Time : ${uiState.time}"
+                        )
                     }
 
-                }
+                    Column(
+                        modifier = Modifier.align(Alignment.CenterEnd).width(IntrinsicSize.Min)
+                    ) {
+                        Image(
+                            modifier = Modifier.padding(horizontal = 8.dp).width(200.dp),
+                            painter = painterResource("logo_n.png"),
+                            contentDescription = ""
+                        )
 
+                        Text(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            text = "1st Team v1.0",
+                            textAlign = TextAlign.End
+                        )
+                    }
+                }
 
                 Row(
                     modifier = Modifier.height(IntrinsicSize.Min)
@@ -121,11 +176,35 @@ fun MainScreen() {
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(
-                            modifier = Modifier.padding(8.dp),
-                            text = "Processes (${processes.size})",
-                            style = MaterialTheme.typography.subtitle1
-                        )
+                        Row {
+                            Text(
+                                modifier = Modifier.padding(8.dp),
+                                text = "Processes (${processes.size})",
+                                style = MaterialTheme.typography.subtitle1
+                            )
+
+                            Box(modifier = Modifier.padding(8.dp))
+
+                            Text(
+                                modifier = Modifier
+                                    .clickable {
+                                        isFileOpenerOpened = true
+                                    }
+                                    .padding(8.dp),
+                                text = "Import from..",
+                                color = MaterialTheme.colors.primary
+                            )
+
+                            Text(
+                                modifier = Modifier
+                                    .clickable {
+                                        isFileSaverOpened = true
+                                    }
+                                    .padding(8.dp),
+                                text = "Export to..",
+                                color = MaterialTheme.colors.primary
+                            )
+                        }
 
                         ProcessesScreen(
                             processes = processes,
@@ -133,7 +212,8 @@ fun MainScreen() {
                                 processes.add(it)
                             }, onProcessDelete = {
                                 processes.remove(it)
-                            }
+                            },
+                            enabled = !isRunning
                         )
                     }
 
@@ -147,43 +227,71 @@ fun MainScreen() {
                             style = MaterialTheme.typography.subtitle1
                         )
 
-                        ProcessorsScreen(
+                        CoresScreen(
                             cores = cores,
                             onProcessorChange = { i, processor ->
                                 cores[i] = processor
-                            }
+                                uiState = uiState.copy(ganttChartMap = cores.filterNotNull().associateWith { listOf() })
+                            },
+                            totalPowerConsumptions = uiState.totalPowerConsumptions,
+                            enabled = !isRunning
                         )
                     }
                 }
 
-                with(selectedAlgorithm.value.requireReadyQueuePerCore) {
+                /*with(selectedAlgorithm.value.requireReadyQueuePerCore) {
                     Text(
                         modifier = Modifier.padding(8.dp),
-                        text = if(this) "Ready Queue (Per Core)" else "Ready Queue",
+                        text = if (this) "Ready Queue (Per Core)" else "Ready Queue",
                         style = MaterialTheme.typography.subtitle1
                     )
 
                     if (this) {
                         PerCoreReadyQueue(
                             cores = cores,
-                            readyQueues = readyQueue
+                            readyQueues = uiState.readyQueue
                         )
                     } else {
-                        SingleReadyQueue(singleReadyQueue)
+                        SingleReadyQueue(uiState.readyQueue[0])
                     }
-                }
+                }*/
 
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = "Gantt Chart",
+                    text = "Ready Queue",
                     style = MaterialTheme.typography.subtitle1
                 )
 
+                ReadyQueueList(
+                    readyQueues = uiState.readyQueue
+                )
+
+                Row {
+                    Text(
+                        modifier = Modifier.padding(8.dp),
+                        text = "Gantt Chart",
+                        style = MaterialTheme.typography.subtitle1
+                    )
+
+                    Text(
+                        modifier = Modifier.clickable { accumulation *= 2 }.padding(8.dp),
+                        text = "+",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = MaterialTheme.colors.primary
+                    )
+
+                    Text(
+                        modifier = Modifier.clickable { accumulation /= 2 }.padding(8.dp),
+                        text = "-",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = MaterialTheme.colors.primary
+                    )
+                }
+
                 GanttChart(
-                    accumulation = 20.dp,
+                    accumulation = accumulation,
                     processes = processes,
-                    cores = cores,
-                    ganttChartItems = ganttChart
+                    ganttChartItems = uiState.ganttChartMap
                 )
 
                 Text(
@@ -192,7 +300,9 @@ fun MainScreen() {
                     style = MaterialTheme.typography.subtitle1
                 )
 
-                ResultScreen(executeResult)
+                ResultScreen(uiState.executeResult)
+
+                Box(modifier = Modifier.height(8.dp))
             }
         }
     }

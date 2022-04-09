@@ -1,10 +1,8 @@
-package items
-
-import androidx.compose.ui.graphics.Color
+package model
 
 data class GanttChartItem(
-    val process: Process,
-    val coreNumber: Int,
+    val process: model.Process,
+    val core: Core,
     val time : IntRange
 )
 

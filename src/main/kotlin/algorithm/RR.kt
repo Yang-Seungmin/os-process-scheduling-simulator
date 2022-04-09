@@ -1,4 +1,7 @@
 package algorithm
 
-class RR : SchedulingAlgorithm("RR", true) {
+class RR : SchedulingAlgorithm("RR") {
+    override fun run() {
+        TODO("Not yet implemented")
+    }
 }
