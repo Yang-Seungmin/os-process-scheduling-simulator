@@ -3,18 +3,17 @@ package algorithm
 import kotlinx.coroutines.*
 import model.Core
 import model.ExecuteResult
-import model.GanttChartItem
 import model.Process
 import java.util.*
 import kotlin.math.roundToInt
 
 abstract class SchedulingAlgorithm(
-    val algorithmName: String,
-    readyQueueCount: Int = 1
+    val algorithmName: String
 ) {
-    protected val _readyQueue = (1..readyQueueCount).map { LinkedList<Process>() }
-    val readyQueue : List<List<Process>> get() = _readyQueue
-    protected val singleReadyQueue: LinkedList<Process> get() = _readyQueue[0]
+    protected val _readyQueue : MutableList<Queue<Process>> = (1..1).map { LinkedList<Process>() }.toMutableList()
+    val readyQueue : List<Queue<Process>> get() = _readyQueue
+
+    protected val singleReadyQueue: Queue<Process> get() = _readyQueue[0]
 
     private val _cores = mutableListOf<Core>()
     val cores : List<Core> get() = _cores
@@ -59,16 +58,20 @@ abstract class SchedulingAlgorithm(
 
     abstract fun run()
 
-    fun init() {
+    open fun init() {
+        _cores.forEach {
+            it.process = null
+        }
         _totalPowerConsumption.clear()
         _totalPowerConsumption.putAll(cores.associateWith { 0.0 }.toMutableMap())
-        _processes.forEach { it.executedTime = 0 }
-        _readyQueue.forEach {
-            it.clear()
+        _processes.forEach {
+            it.burstTime = 0
+            it.doneWorkload = 0
         }
         _processRecord.clear()
-
         _endProcesses.clear()
+        _readyQueue.clear()
+        _readyQueue.add(LinkedList())
         time = 0
     }
 
@@ -77,6 +80,7 @@ abstract class SchedulingAlgorithm(
         while(!endProcesses.map { it.process }.containsAll(processes)) {
             run()
         }
+        println()
     }
 
     open fun printStatus() {

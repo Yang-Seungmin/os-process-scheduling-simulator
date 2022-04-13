@@ -8,6 +8,7 @@ data class Process(
     val processName: String,
     val processColor: Long,
     val arrivalTime: Int,
-    val burstTime: Int,
-    @Transient var executedTime: Int = 0
+    val workload: Int,
+    @Transient var doneWorkload: Int = 0,
+    @Transient var burstTime: Int = 0
 )

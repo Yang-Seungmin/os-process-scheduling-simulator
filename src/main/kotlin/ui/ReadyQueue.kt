@@ -14,6 +14,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import model.Process
 import model.Core
+import java.util.*
+import kotlin.collections.ArrayList
 
 @Composable
 fun PerCoreReadyQueue(
@@ -49,7 +51,7 @@ fun PerCoreReadyQueue(
 
 @Composable
 fun ReadyQueueList(
-    readyQueues: List<List<Process>>
+    readyQueues: List<Queue<Process>>
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 8.dp)
@@ -61,16 +63,18 @@ fun ReadyQueueList(
                     .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
                     .height(24.dp)
             ) {
+                val readyQueueList = readyQueue.toList()
+
                 items(readyQueue.size) { i ->
                     Box(
                         modifier = Modifier.height(24.dp)
                             .defaultMinSize(minWidth = 24.dp)
                             .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
-                            .background(Color(readyQueue[i].processColor))
+                            .background(Color(readyQueueList[i].processColor))
                             .padding(horizontal = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = readyQueue[i].processName)
+                        Text(text = readyQueueList[i].processName)
                     }
                 }
             }
@@ -78,7 +82,7 @@ fun ReadyQueueList(
 
         Box {
             Text(
-                modifier = Modifier.padding(start = 150.dp),
+                modifier = Modifier,
                 text = "First",
                 style = MaterialTheme.typography.caption
             )

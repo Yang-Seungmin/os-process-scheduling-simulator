@@ -4,10 +4,11 @@ import model.Core
 import model.ExecuteResult
 import model.GanttChartItem
 import model.Process
+import java.util.*
 
 data class UiState(
     val totalPowerConsumptions: Map<Core, Double>,
-    val readyQueue: List<List<Process>>,
+    val readyQueue: List<Queue<Process>>,
     val ganttChartMap: Map<Core, List<GanttChartItem>>,
     val executeResult: List<ExecuteResult>,
     val time: String
@@ -17,7 +18,7 @@ data class UiState(
         fun default() = UiState(
             totalPowerConsumptions = mapOf(),
             readyQueue = listOf(
-                mutableListOf()
+                LinkedList()
             ),
             ganttChartMap = mapOf(
                 Core.PCore("Core 0 [P-Core]") to listOf(),

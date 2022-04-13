@@ -18,7 +18,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import jdk.jfr.Enabled
 import model.Process
 import processColors
 
@@ -75,7 +74,7 @@ fun ProcessesHeader() {
         listOf(
             "Process Name",
             "Arrival Time (AT)",
-            "Burst Time (BT)"
+            "Workload"
         ).apply {
             forEach {
                 Box(
@@ -113,7 +112,7 @@ fun ProcessItem(
         listOf(
             process.processName,
             process.arrivalTime.toString(),
-            process.burstTime.toString()
+            process.workload.toString()
         ).apply {
             forEach {
                 Box(
@@ -166,10 +165,9 @@ fun ProcessAddScreen(
 ) {
     val processName = rememberSaveable { mutableStateOf("") }
     val arrivalTime = rememberSaveable { mutableStateOf("0") }
-    val burstTime = rememberSaveable { mutableStateOf("1") }
+    val workload = rememberSaveable { mutableStateOf("1") }
 
     Column {
-
         Text(
             modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp),
             text = "Process Name"
@@ -212,7 +210,7 @@ fun ProcessAddScreen(
 
         Text(
             modifier = Modifier.padding(horizontal = 8.dp),
-            text = "Burst Time"
+            text = "Workload"
         )
         BasicTextField(
             modifier = Modifier.padding(horizontal = 8.dp).fillMaxWidth()
@@ -221,8 +219,8 @@ fun ProcessAddScreen(
                     color = MaterialTheme.colors.onBackground,
                     shape = MaterialTheme.shapes.medium)
                 .padding(4.dp),
-            value = burstTime.value,
-            onValueChange = { burstTime.value = it },
+            value = workload.value,
+            onValueChange = { workload.value = it },
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next,
                 keyboardType = KeyboardType.Number
@@ -239,7 +237,7 @@ fun ProcessAddScreen(
                         pid = processesCount + 1,
                         processName = processName.value,
                         arrivalTime = arrivalTime.value.toIntOrNull() ?: 0,
-                        burstTime = burstTime.value.toIntOrNull() ?: 1,
+                        workload = workload.value.toIntOrNull() ?: 1,
                         processColor = processColors[processColorCount++ % processColors.size]
                     )
                 )
@@ -247,7 +245,7 @@ fun ProcessAddScreen(
             enabled =
             processName.value.isNotBlank()
                     && (arrivalTime.value.toIntOrNull() ?: -1) >= 0
-                    && (burstTime.value.toIntOrNull() ?: -1) >= 1
+                    && (workload.value.toIntOrNull() ?: -1) >= 1
                     && enabled
         )
     }

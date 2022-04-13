@@ -2,6 +2,7 @@ package ui
 
 import algorithm.FCFS
 import algorithm.RR
+import algorithm.SPN
 import algorithm.SchedulingAlgorithm
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -36,6 +37,7 @@ fun MainScreen() {
     var isFileOpenerOpened by remember { mutableStateOf(false) }
     var isFileSaverOpened by remember { mutableStateOf(false) }
     var isRunning by remember { mutableStateOf(false) }
+    var interval by remember { mutableStateOf(100L) }
     var accumulation by remember { mutableStateOf(20.dp) }
     val coroutineScope = rememberCoroutineScope()
 
@@ -52,7 +54,7 @@ fun MainScreen() {
     var uiState by remember { mutableStateOf(UiState.default()) }
 
     val algorithms = listOf<SchedulingAlgorithm>(
-        FCFS(), RR()
+        FCFS(), RR(), SPN()
     )
     val selectedAlgorithm = rememberSaveable {
         mutableStateOf<SchedulingAlgorithm>(algorithms[0])
@@ -84,7 +86,7 @@ fun MainScreen() {
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
             Column(
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
+                    //.verticalScroll(rememberScrollState())
             ) {
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
@@ -138,7 +140,7 @@ fun MainScreen() {
                                                     time = "${time}s (END)"
                                                 )
                                                 isRunning = false
-                                            }, 100
+                                            }, interval
                                         )
                                     }
                                 }
@@ -274,14 +276,20 @@ fun MainScreen() {
                     )
 
                     Text(
-                        modifier = Modifier.clickable { accumulation *= 2 }.padding(8.dp),
+                        modifier = Modifier.clickable {
+                            if (accumulation < 160.dp)
+                                accumulation *= 2
+                        }.padding(8.dp),
                         text = "+",
                         style = MaterialTheme.typography.subtitle1,
                         color = MaterialTheme.colors.primary
                     )
 
                     Text(
-                        modifier = Modifier.clickable { accumulation /= 2 }.padding(8.dp),
+                        modifier = Modifier.clickable {
+                            if (accumulation > 4.dp)
+                                accumulation /= 2
+                        }.padding(8.dp),
                         text = "-",
                         style = MaterialTheme.typography.subtitle1,
                         color = MaterialTheme.colors.primary

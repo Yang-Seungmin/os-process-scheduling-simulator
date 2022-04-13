@@ -56,7 +56,7 @@ fun ResultHeader() {
             "Arrival Time (AT)",
             "Burst Time (BT)",
             "Waiting Time (WT)",
-            "Turnaround Time (WT)",
+            "Turnaround Time (TT)",
             "Normalized Turnaround Time(NTT)"
         ).apply {
             forEach {
@@ -95,7 +95,7 @@ fun ResultItem(
                 process.burstTime.toString(),
                 (turnaroundTime - process.burstTime).toString(),
                 turnaroundTime.toString(),
-                String.format("%.3f", executeResult.turnaroundTime / executeResult.process.burstTime.toDouble())
+                String.format("%.3f", executeResult.turnaroundTime / executeResult.process.doneWorkload.toDouble())
             ).apply {
                 forEach {
                     Box(

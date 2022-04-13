@@ -184,7 +184,7 @@ fun GanttChartScale(
                 .height(24.dp),
             state = state
         ) {
-            items(accumulation.value.toInt() * 20) { i ->
+            items(Int.MAX_VALUE) { i ->
                 if ((accumulation * i).value.toInt() % bigScaleDp.value.toInt() == 0) {
 
                     Box(

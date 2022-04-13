@@ -1,11 +1,23 @@
 package algorithm
 
+import algorithm.queue.SPNQueue
 import model.Core
 import model.ExecuteResult
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 
-class FCFS : SchedulingAlgorithm("FCFS") {
+class SPN : SchedulingAlgorithm("SPN") {
+
+    override fun init() {
+        super.init()
+    }
+
+    private fun pollShortestProcess() : model.Process? {
+        val process = singleReadyQueue.minByOrNull { it.workload }
+        singleReadyQueue.remove(process)
+        return process
+    }
 
     override fun run() {
         // Put processes into ready queue
@@ -17,13 +29,13 @@ class FCFS : SchedulingAlgorithm("FCFS") {
 
         cores.forEachIndexed { i, core ->
             if (core.process == null && readyQueue.isNotEmpty())
-                core.process = singleReadyQueue.poll()
+                core.process = pollShortestProcess()
 
             val powerConsumption = if (core.process == null) core.idlePowerConsumption else core.powerConsumption
 
             _totalPowerConsumption[core] = _totalPowerConsumption.getOrDefault(core, 0.0) + powerConsumption
 
-            if(_processRecord[core] == null) _processRecord[core] = mutableListOf()
+            if (_processRecord[core] == null) _processRecord[core] = mutableListOf()
             _processRecord[core]!!.add(core.process)
         }
 
@@ -49,7 +61,16 @@ class FCFS : SchedulingAlgorithm("FCFS") {
         cores.forEachIndexed { index, core ->
             print(" Core $index[${core.process?.processName ?: "(Empty)"}][${((totalPowerConsumption[core] ?: 0.0) * 10).roundToInt() / 10.0}W]")
         }
-        print(" Ready Queue: ${singleReadyQueue.joinToString(prefix = "[", postfix = "]") { it.processName }} ")
+        print(
+            " Ready Queue: ${
+                readyQueue.joinToString(prefix = "{", postfix = "}") {
+                    it.joinToString(
+                        prefix = "[",
+                        postfix = "]"
+                    ) { it.processName }
+                }
+            } "
+        )
         print(
             " Turnaround Time: ${
                 endProcesses.joinToString(
@@ -63,7 +84,7 @@ class FCFS : SchedulingAlgorithm("FCFS") {
 }
 
 fun main() {
-    with(FCFS()) {
+    with(SPN()) {
         setCores(
             Core.ECore("E-core 1")
         )
