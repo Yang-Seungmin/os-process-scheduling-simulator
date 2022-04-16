@@ -11,3 +11,10 @@ val processColors = listOf(
     0xffBFC9CA,
     0xff85929E,
 )
+
+val coreColors = listOf(
+    0xffD32F2F,
+    0xff1976D2,
+    0xff388E3C,
+    0xff5D4037
+)

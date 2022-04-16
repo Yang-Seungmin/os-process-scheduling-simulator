@@ -4,31 +4,36 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
+import coreColors
 import model.GanttChartItem
 import model.Core
 import model.range
 import util.toDp
 import util.toPx
+import kotlin.math.*
 
 @Composable
 fun GanttChart(
     accumulation: Dp,
     processes: List<model.Process>,
-    ganttChartItems: Map<Core, List<GanttChartItem>>
+    ganttChartItems: Map<Core, List<GanttChartItem>>,
+    powerConsumptions: Map<Core, List<Double>>,
+    ratios: Map<Core, List<Double>>,
+    state: LazyListState
 ) {
-    val state = rememberLazyListState()
-
+    val scrollAmount = state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
     Column(
         modifier = Modifier.padding(8.dp)
     ) {
@@ -38,14 +43,101 @@ fun GanttChart(
             state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
         )
         ganttChartItems.entries.forEach { (core, list) ->
-                GanttChartBar(
-                    accumulation,
-                    core,
-                    list,
-                    state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
-                )
+            GanttChartBar(
+                accumulation,
+                core,
+                list,
+                scrollAmount
+            )
         }
+        GanttChartGraph("Power consumption graph", "W", accumulation, powerConsumptions.mapKeys { it.key.name }, scrollAmount)
+        GanttChartGraph("Utilization", "%", accumulation, ratios.mapKeys { it.key.name }.mapValues { it.value.map { (it * 10000).roundToInt() / 100.0 } }, scrollAmount)
+
         GanttChartScale(accumulation, state)
+    }
+}
+
+@Composable
+fun GanttChartGraph(
+    graphName: String,
+    unit: String,
+    accumulation: Dp,
+    values: Map<String, List<Double>>,
+    scrollAmount: Float
+) {
+    val onlyValues = values.values.flatten()
+    val max = (onlyValues.maxOfOrNull { it } ?: (1 / 1.1)) * 1.1
+    val height = 80.dp
+    Box(
+        Modifier.height(height)
+            .fillMaxWidth()
+            .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+    ) {
+        Box(
+            modifier = Modifier
+                .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+                .padding(start = 1.dp)
+                .height(height)
+        ) {
+            val colors = coreColors.map { Color(it) }
+            Canvas(
+                modifier = Modifier.height(height)
+            ) {
+                values.entries.forEachIndexed { index, (name, items) ->
+                    var x1 = Float.NaN
+                    var y1 = Float.NaN
+                    items.forEachIndexed { time, value ->
+                        if (scrollAmount <= accumulation.toPx() * time + 149.dp.toPx()) {
+                            val x2 = accumulation.toPx() * time - scrollAmount + 149.dp.toPx()
+                            val y2 = ((1 - value / max) * height.toPx()).toFloat()
+                            drawCircle(
+                                color = colors[index],
+                                radius = 1.dp.toPx(),
+                                center = Offset(x2, y2)
+                            )
+
+                            if (!x1.isNaN() && !y1.isNaN()) {
+                                drawLine(
+                                    color = colors[index],
+                                    start = Offset(x1, y1),
+                                    end = Offset(x2, y2),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            }
+
+                            x1 = x2
+                            y1 = y2
+                        }
+                    }
+                }
+            }
+        }
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colors.background)
+                .height(120.dp)
+                .width(150.dp)
+                .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+                .padding(horizontal = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = graphName,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                modifier = Modifier.align(Alignment.TopEnd),
+                text = "${((max * 10).roundToInt() / 10.0)}$unit",
+                maxLines = 1,
+                style = MaterialTheme.typography.overline
+            )
+            Text(
+                modifier = Modifier.align(Alignment.BottomEnd),
+                text = "0$unit",
+                maxLines = 1,
+                style = MaterialTheme.typography.overline
+            )
+        }
     }
 }
 
@@ -56,14 +148,14 @@ fun GanttChartArrivalBar(
     scrollAmount: Float
 ) {
     Row(
-        Modifier.height(24.dp)
+        Modifier.height(20.dp)
             .fillMaxWidth()
-            .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+            .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
     ) {
         Box(
-            modifier = Modifier.height(24.dp)
+            modifier = Modifier.height(20.dp)
                 .width(150.dp)
-                .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .padding(horizontal = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -74,13 +166,13 @@ fun GanttChartArrivalBar(
         }
         Box(
             modifier = Modifier
-                .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
-                .height(24.dp)
+                .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+                .height(20.dp)
         ) {
             processes.forEachIndexed { i, _ ->
                 if (scrollAmount <= accumulation.toPx() * (processes[i].arrivalTime))
                     Box(
-                        modifier = Modifier.height(24.dp)
+                        modifier = Modifier.height(20.dp)
                             .padding(start = accumulation * (processes[i].arrivalTime) - scrollAmount.toDp()),
                         contentAlignment = Alignment.TopStart
                     ) {
@@ -112,45 +204,45 @@ fun GanttChartBar(
     scrollAmount: Float
 ) {
     Row(
-        Modifier.height(24.dp)
+        Modifier.height(20.dp)
             .fillMaxWidth()
-            .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+            .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
     ) {
         Box(
-            modifier = Modifier.height(24.dp)
+            modifier = Modifier.height(20.dp)
                 .width(150.dp)
-                .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .padding(horizontal = 4.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "${core.name}",
-                color = if(core == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground,
+                color = if (core == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground,
                 maxLines = 1
             )
         }
 
         Box(
             modifier = Modifier
-                .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
-                .height(24.dp)
+                .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+                .height(20.dp)
         ) {
             ganttChartItems.forEachIndexed { i, ganttChartItem ->
                 if (scrollAmount.toDp() <= accumulation * (ganttChartItem.time.last)) {
                     val padding = accumulation * ganttChartItem.time.first
 
                     Box(
-                        modifier = Modifier.height(24.dp)
+                        modifier = Modifier.height(20.dp)
                             .padding(start = if (scrollAmount.toDp() < padding) padding - scrollAmount.toDp() else 0.dp)
                             .width(accumulation * ganttChartItem.time.range() - if (scrollAmount.toDp() > padding) scrollAmount.toDp() - padding else 0.dp)
-                            .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                            .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                             .background(Color(ganttChartItem.process.processColor))
                             .padding(horizontal = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = ganttChartItem.process.processName,
-                            maxLines = 1,
+                            maxLines = 1
                         )
                     }
                 }
@@ -181,7 +273,7 @@ fun GanttChartScale(
         }
         LazyRow(
             modifier = Modifier
-                .height(24.dp),
+                .height(20.dp),
             state = state
         ) {
             items(Int.MAX_VALUE) { i ->
@@ -218,4 +310,8 @@ fun GanttChartScale(
             }
         }
     }
+}
+
+fun Number.toDegree(): Double {
+    return Math.toDegrees(this.toDouble())
 }

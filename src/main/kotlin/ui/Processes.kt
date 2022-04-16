@@ -33,8 +33,8 @@ fun ProcessesScreen(
     Row(
         modifier = Modifier
             .padding(horizontal = 8.dp)
-            .border(width = 1.dp, color = MaterialTheme.colors.onBackground)
-            .height(200.dp)
+            .customBorder()
+            .height(160.dp)
     ) {
         Box(
             modifier = Modifier
@@ -81,10 +81,10 @@ fun ProcessesHeader() {
                     modifier = Modifier.weight(1f / this.size)
                         .height(IntrinsicSize.Min)
                         .background(MaterialTheme.colors.primary)
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 ) {
                     Text(
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                        modifier = Modifier.fillMaxSize().padding(2.dp),
                         text = it,
                         color = MaterialTheme.colors.onPrimary,
                         fontWeight = FontWeight.Bold,
@@ -118,10 +118,10 @@ fun ProcessItem(
                 Box(
                     modifier = Modifier.weight(1f / this.size)
                         .background(Color(process.processColor))
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 ) {
                     Text(
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                        modifier = Modifier.fillMaxSize().padding(2.dp),
                         text = it,
                         textAlign = TextAlign.Center
                     )
@@ -144,10 +144,10 @@ fun DummyProcessItem(
                 Box(
                     modifier = Modifier.weight(1f / this.size)
                         .background(MaterialTheme.colors.background)
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 ) {
                     Text(
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                        modifier = Modifier.fillMaxSize().padding(2.dp),
                         text = it,
                         textAlign = TextAlign.Center
                     )
@@ -178,7 +178,7 @@ fun ProcessAddScreen(
                     width = 1.dp,
                     color = MaterialTheme.colors.onBackground,
                     shape = MaterialTheme.shapes.medium)
-                .padding(4.dp),
+                .padding(2.dp),
             value = processName.value,
             onValueChange = { processName.value = it },
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -198,7 +198,7 @@ fun ProcessAddScreen(
                     width = 1.dp,
                     color = MaterialTheme.colors.onBackground,
                     shape = MaterialTheme.shapes.medium)
-                .padding(4.dp),
+                .padding(2.dp),
             value = arrivalTime.value,
             onValueChange = { arrivalTime.value = it },
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -218,7 +218,7 @@ fun ProcessAddScreen(
                     width = 1.dp,
                     color = MaterialTheme.colors.onBackground,
                     shape = MaterialTheme.shapes.medium)
-                .padding(4.dp),
+                .padding(2.dp),
             value = workload.value,
             onValueChange = { workload.value = it },
             keyboardOptions = KeyboardOptions.Default.copy(

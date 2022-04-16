@@ -7,7 +7,7 @@ import kotlin.math.roundToInt
 
 class RR : SchedulingAlgorithm("RR") {
 
-    var rrQuantum = 1
+    var rrQuantum = 2
     val resideTimes = mutableMapOf<Core, Pair<model.Process?, Int>>()
 
     override fun init() {
@@ -91,3 +91,26 @@ class RR : SchedulingAlgorithm("RR") {
         println()
     }
 }
+
+/*
+    fork_mutexes : Semaphore array <- [1, 1, 1, 1, 1]
+
+    (Pi) P0 P1 P2 P3 P4
+    ...
+        P(fork_mutexes[i])
+        P(fork_mutexes[(i + 1) % 5])
+
+    /* CS start */
+    forks[i] = 0
+    forks[(i + 1) % 5] = 0
+
+    //EAT
+
+    forks[i] = 1
+    forks[(i + 1) % 5] = 1
+
+    /* CS END */
+
+    V(fork_mutexes[i])
+    V(fork_mutexes[(i + 1) % 5])
+ */

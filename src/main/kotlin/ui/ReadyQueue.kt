@@ -61,14 +61,14 @@ fun ReadyQueueList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
-                    .height(24.dp)
+                    .height(20.dp)
             ) {
                 val readyQueueList = readyQueue.toList()
 
                 items(readyQueue.size) { i ->
                     Box(
-                        modifier = Modifier.height(24.dp)
-                            .defaultMinSize(minWidth = 24.dp)
+                        modifier = Modifier.height(20.dp)
+                            .defaultMinSize(minWidth = 20.dp)
                             .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
                             .background(Color(readyQueueList[i].processColor))
                             .padding(horizontal = 4.dp),
@@ -133,11 +133,11 @@ fun ReadyQueueBar(
         modifier = Modifier
             .fillMaxWidth()
             .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
-            .height(24.dp)
+            .height(20.dp)
     ) {
         items(1) {
             Box(
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.height(20.dp)
                     .defaultMinSize(minWidth = 150.dp)
                     .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
                     .padding(horizontal = 4.dp),
@@ -151,8 +151,8 @@ fun ReadyQueueBar(
         }
         items(processes.size) { i ->
             Box(
-                modifier = Modifier.height(24.dp)
-                    .defaultMinSize(minWidth = 24.dp)
+                modifier = Modifier.height(20.dp)
+                    .defaultMinSize(minWidth = 20.dp)
                     .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
                     .background(Color(processes[i].processColor))
                     .padding(horizontal = 4.dp),
@@ -172,12 +172,12 @@ fun SingleReadyQueueBar(
         modifier = Modifier
             .fillMaxWidth()
             .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
-            .height(24.dp)
+            .height(20.dp)
     ) {
         items(processes.size) { i ->
             Box(
-                modifier = Modifier.height(24.dp)
-                    .defaultMinSize(minWidth = 24.dp)
+                modifier = Modifier.height(20.dp)
+                    .defaultMinSize(minWidth = 20.dp)
                     .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
                     .background(Color(processes[i].processColor))
                     .padding(horizontal = 4.dp),

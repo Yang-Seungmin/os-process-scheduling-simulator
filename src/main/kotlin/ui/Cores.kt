@@ -1,6 +1,5 @@
 package ui
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.MaterialTheme
@@ -20,6 +19,7 @@ fun CoresScreen(
     cores: List<Core?>,
     enabled: Boolean,
     totalPowerConsumptions: Map<Core, Double>,
+    utilization: Map<Core, Double>,
     onProcessorChange: (Int, Core?) -> Unit
 ) {
     Row(
@@ -34,6 +34,7 @@ fun CoresScreen(
                     onProcessorChange(index, it)
                 },
                 totalPowerConsumption = totalPowerConsumptions[core] ?: 0.0,
+                utilization = utilization[core] ?: 0.0,
                 enabled = enabled
             )
         }
@@ -48,17 +49,14 @@ fun CoreControlPanel(
     coreNumber: Int,
     core: Core?,
     totalPowerConsumption: Double,
-    onProcessorChange: (Core?) -> Unit
+    onProcessorChange: (Core?) -> Unit,
+    utilization: Double
 ) {
     Column(
         modifier = modifier
             .padding(horizontal = 8.dp)
-            .height(200.dp)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colors.onBackground,
-                shape = MaterialTheme.shapes.large
-            )
+            .height(160.dp)
+            .customBorder()
     ) {
         Text(
             modifier = Modifier
@@ -87,6 +85,7 @@ fun CoreControlPanel(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
+                    modifier = Modifier.height(36.dp),
                     enabled = enabled,
                     selected = when (it) {
                         "P-Core" -> core is Core.PCore
@@ -105,9 +104,8 @@ fun CoreControlPanel(
 
         Text(
             modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .padding(top = 8.dp),
-            text = "${(totalPowerConsumption * 10).roundToInt() / 10.0}W",
+                .padding(horizontal = 8.dp),
+            text = "${(totalPowerConsumption * 10).roundToInt() / 10.0}W\n${(utilization * 10000).roundToInt() / 100.0}%",
             style = MaterialTheme.typography.caption
         )
     }

@@ -20,7 +20,7 @@ fun ResultScreen(
     Row(
         modifier = Modifier
             .padding(horizontal = 8.dp)
-            .border(width = 1.dp, color = MaterialTheme.colors.onBackground)
+            .customBorder()
             .height(200.dp)
     ) {
         Box(
@@ -64,10 +64,10 @@ fun ResultHeader() {
                     modifier = Modifier.weight(1f / this.size)
                         .background(MaterialTheme.colors.primary)
                         .fillMaxHeight()
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 ) {
                     Text(
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                        modifier = Modifier.fillMaxSize().padding(2.dp),
                         text = it,
                         color = MaterialTheme.colors.onPrimary,
                         fontWeight = FontWeight.Bold,
@@ -95,15 +95,15 @@ fun ResultItem(
                 process.burstTime.toString(),
                 (turnaroundTime - process.burstTime).toString(),
                 turnaroundTime.toString(),
-                String.format("%.3f", executeResult.turnaroundTime / executeResult.process.doneWorkload.toDouble())
+                String.format("%.3f", executeResult.turnaroundTime / executeResult.process.burstTime.toDouble())
             ).apply {
                 forEach {
                     Box(
                         modifier = Modifier.weight(1f / this.size)
-                            .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                            .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                     ) {
                         Text(
-                            modifier = Modifier.fillMaxSize().padding(4.dp),
+                            modifier = Modifier.fillMaxSize().padding(2.dp),
                             text = it,
                             textAlign = TextAlign.Center
                         )
@@ -127,10 +127,10 @@ fun DummyResultItem() {
                 Box(
                     modifier = Modifier.weight(1f / this.size)
                         .background(MaterialTheme.colors.background)
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 ) {
                     Text(
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                        modifier = Modifier.fillMaxSize().padding(2.dp),
                         text = it,
                         textAlign = TextAlign.Center
                     )
