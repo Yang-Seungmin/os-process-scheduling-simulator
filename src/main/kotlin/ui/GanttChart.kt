@@ -88,7 +88,7 @@ fun GanttChartGraph(
                     var y1 = Float.NaN
                     items.forEachIndexed { time, value ->
                         if (scrollAmount <= accumulation.toPx() * time + 149.dp.toPx()) {
-                            val x2 = accumulation.toPx() * time - scrollAmount + 149.dp.toPx()
+                            val x2 = accumulation.toPx() * (time + 1) - scrollAmount + 149.dp.toPx()
                             val y2 = ((1 - value / max) * height.toPx()).toFloat()
                             drawCircle(
                                 color = colors[index],

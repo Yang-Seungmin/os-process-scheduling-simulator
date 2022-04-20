@@ -266,7 +266,7 @@ fun MainScreen() {
                                         uiState.copy(ganttChartMap = cores.filterNotNull().associateWith { listOf() })
                                 },
                                 totalPowerConsumptions = uiState.totalPowerConsumptions,
-                                utilization = utilization.mapValues { it.value.last() },
+                                utilization = utilization.mapValues { it.value.lastOrNull() ?: 0.0 },
                                 enabled = !isRunning
                             )
                         }
