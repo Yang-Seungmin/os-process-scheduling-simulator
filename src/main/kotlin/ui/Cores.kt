@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import model.Core
 import kotlin.math.roundToInt
 
@@ -58,6 +59,7 @@ fun CoreControlPanel(
     Box(
         modifier
             .padding(horizontal = 8.dp)
+            .heightIn(min = 120.dp, max = 240.dp)
             .fillMaxHeight()
             .customBorder(),
         contentAlignment = Alignment.TopEnd

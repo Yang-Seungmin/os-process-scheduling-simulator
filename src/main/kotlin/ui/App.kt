@@ -9,6 +9,7 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Button
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
@@ -19,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -31,7 +31,9 @@ import kotlinx.serialization.json.encodeToStream
 import model.Process
 import model.Core
 import util.toGanttChart
+import util.toPx
 import java.io.File
+import kotlin.math.roundToInt
 
 
 @Composable
@@ -46,6 +48,12 @@ fun MainScreen() {
     val accumulationLevelAnimate by animateFloatAsState(accumulationLevel)
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberLazyListState()
+    var autoScrollThreshold by remember { mutableStateOf(0) }
+    var offset by remember { mutableStateOf(0) }
+
+    offset = (autoScrollThreshold / (maxAccumulation / accumulationLevel).toPx()).roundToInt()
+
+    val processScrollState = rememberLazyListState()
 
     val processes = rememberSaveable { mutableStateListOf<Process>() }
     val cores = rememberSaveable {
@@ -81,6 +89,8 @@ fun MainScreen() {
         } else {
             isRunning = true
             with(selectedAlgorithm.value) {
+                if (this is RR) this.rrQuantum = rrQuantum
+
                 setCores(cores.filterNotNull())
                 setProcesses(processes)
                 powerConsumptions.clear()
@@ -107,7 +117,7 @@ fun MainScreen() {
                             ganttChartMap = processRecord.toGanttChart()
                         )
                         coroutineScope.launch {
-                            val offset = (accumulationLevel * 2.5).toInt()
+                            println(listOf(offset, autoScrollThreshold, maxAccumulation, accumulationLevel))
                             scrollState.animateScrollToItem(with(time - offset) { if (this > 0) this else 0 })
                         }
                     },
@@ -226,11 +236,32 @@ fun MainScreen() {
                                     )
                                 }
 
-                                Text(
-                                    modifier = Modifier.padding(horizontal = 8.dp),
-                                    text = "Time : ${uiState.time}",
-                                    style = MaterialTheme.typography.subtitle1
-                                )
+                                Column(
+                                    modifier = Modifier.width(150.dp).padding(8.dp),
+                                ) {
+                                    Text(
+                                        modifier = Modifier,
+                                        text = "Time : ${uiState.time}",
+                                        style = MaterialTheme.typography.subtitle1
+                                    )
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Interval "
+                                        )
+                                        BasicTextField(
+                                            modifier = Modifier.customBorder().padding(2.dp),
+                                            value = interval.toString(),
+                                            onValueChange = {
+                                                interval = it.toLongOrNull() ?: 100
+                                            },
+                                            textStyle = TextStyle.Default.copy(textAlign = TextAlign.End)
+                                        )
+                                    }
+                                }
+
                             }
                         }
                         Row(
@@ -279,10 +310,14 @@ fun MainScreen() {
                                         processes = processes,
                                         onProcessAdd = {
                                             processes.add(it)
+                                            coroutineScope.launch {
+                                                processScrollState.animateScrollToItem(processes.size)
+                                            }
                                         }, onProcessDelete = {
                                             processes.remove(it)
                                         },
-                                        enabled = !isRunning
+                                        enabled = !isRunning,
+                                        scrollState = processScrollState
                                     )
                                 }
                             }
@@ -332,7 +367,7 @@ fun MainScreen() {
                             ) {
                                 Text(
                                     modifier = Modifier.padding(8.dp),
-                                    text = "Result",
+                                    text = "Result (${uiState.executeResult.size})",
                                     style = MaterialTheme.typography.subtitle1
                                 )
 
@@ -376,6 +411,9 @@ fun MainScreen() {
                                 }
 
                                 GanttChart(
+                                    modifier = Modifier.onGloballyPositioned {
+                                        autoScrollThreshold = (it.size.width * 0.65).toInt()
+                                    },
                                     accumulation = maxAccumulation / accumulationLevelAnimate,
                                     processes = processes,
                                     ganttChartItems = uiState.ganttChartMap,

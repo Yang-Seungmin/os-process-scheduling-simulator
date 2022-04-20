@@ -121,7 +121,7 @@ fun ColumnScope.GanttChartGraph(
         Box(
             modifier = Modifier
                 .background(MaterialTheme.colors.background)
-                .height(120.dp)
+                .fillMaxHeight()
                 .width(150.dp)
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .padding(horizontal = 4.dp),
@@ -154,7 +154,7 @@ fun ColumnScope.GanttChartArrivalBar(
     scrollAmount: Float
 ) {
     Row(
-        Modifier.weight(1f, true)
+        Modifier.height(20.dp)
             .fillMaxWidth()
             .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
     ) {
@@ -210,7 +210,7 @@ fun ColumnScope.GanttChartBar(
     scrollAmount: Float
 ) {
     Row(
-        Modifier.weight(1f)
+        Modifier.height(20.dp)
             .fillMaxWidth()
             .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
     ) {
@@ -265,7 +265,7 @@ fun ColumnScope.GanttChartScale(
     val bigScaleDp = (200 / accumulation.value).toInt() * accumulation
 
     Row(
-        modifier = Modifier.weight(1f)
+        modifier = Modifier.height(20.dp)
     ) {
         Box(
             modifier = Modifier.width(149.5.dp),

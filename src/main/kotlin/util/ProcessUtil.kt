@@ -30,6 +30,6 @@ fun generateRandomProcesses(size: Int, btRange: IntRange, arrivalTimeRange: IntR
 }
 
 fun main() {
-    val processes = generateRandomProcesses(150, 1..20, 0..6)
+    val processes = generateRandomProcesses(100, 1..100, 0..10)
     println(Json.encodeToString(processes))
 }

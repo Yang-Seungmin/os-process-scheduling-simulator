@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -13,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -20,22 +22,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import model.Process
 import processColors
+import util.toPx
+import kotlin.math.roundToInt
 
 var processColorCount = 0
+val itemHeight = 20.dp
 
 @Composable
 fun ProcessesScreen(
     modifier: Modifier = Modifier,
     processes: List<Process>,
     enabled: Boolean,
-    dummyProcessCount: Int = 20,
     onProcessAdd: (Process) -> Unit,
-    onProcessDelete: (Process) -> Unit
+    onProcessDelete: (Process) -> Unit,
+    scrollState: LazyListState
 ) {
+    val dummyProcessCount = rememberSaveable { mutableStateOf(0) }
+    val itemHeightPx = itemHeight.toPx()
+
     Row(
         modifier = modifier
             .padding(horizontal = 8.dp)
             .customBorder()
+            .onGloballyPositioned {
+                dummyProcessCount.value = (it.size.height / itemHeightPx).roundToInt()
+            }
     ) {
         Box(
             modifier = Modifier
@@ -44,13 +55,15 @@ fun ProcessesScreen(
         ) {
             Column {
                 ProcessesHeader()
-                LazyColumn {
+                LazyColumn(
+                    state = scrollState
+                ) {
                     items(processes.size) { index ->
                         ProcessItem(processes[index], onProcessDelete)
                     }
 
-                    if(dummyProcessCount - processes.size > 0) {
-                        items(dummyProcessCount - processes.size) {
+                    if (dummyProcessCount.value - processes.size > 0) {
+                        items(dummyProcessCount.value - processes.size) {
                             DummyProcessItem()
                         }
                     }
@@ -80,7 +93,7 @@ fun ProcessesHeader() {
             forEach {
                 Box(
                     modifier = Modifier.weight(1f / this.size)
-                        .height(IntrinsicSize.Min)
+                        .height(itemHeight)
                         .background(MaterialTheme.colors.primary)
                         .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 ) {
@@ -104,7 +117,7 @@ fun ProcessItem(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth()
-            .height(IntrinsicSize.Min)
+            .height(itemHeight)
             .fillMaxSize()
             .clickable {
                 onItemClick(process)
@@ -115,15 +128,15 @@ fun ProcessItem(
             process.arrivalTime.toString(),
             process.workload.toString()
         ).apply {
-            forEach {
+            forEachIndexed { i, s ->
                 Box(
                     modifier = Modifier.weight(1f / this.size)
-                        .background(Color(process.processColor))
+                        .background(if(i == 0) Color(process.processColor) else MaterialTheme.colors.background)
                         .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 ) {
                     Text(
                         modifier = Modifier.fillMaxSize().padding(2.dp),
-                        text = it,
+                        text = s,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -168,7 +181,9 @@ fun ProcessAddScreen(
     val arrivalTime = rememberSaveable { mutableStateOf("0") }
     val workload = rememberSaveable { mutableStateOf("1") }
 
-    Column {
+    Column(
+        modifier = Modifier.customBorder().fillMaxHeight()
+    ) {
         Text(
             modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp),
             text = "Process Name"
@@ -178,7 +193,8 @@ fun ProcessAddScreen(
                 .border(
                     width = 1.dp,
                     color = MaterialTheme.colors.onBackground,
-                    shape = MaterialTheme.shapes.medium)
+                    shape = MaterialTheme.shapes.medium
+                )
                 .padding(2.dp),
             value = processName.value,
             onValueChange = { processName.value = it },
@@ -198,7 +214,8 @@ fun ProcessAddScreen(
                 .border(
                     width = 1.dp,
                     color = MaterialTheme.colors.onBackground,
-                    shape = MaterialTheme.shapes.medium)
+                    shape = MaterialTheme.shapes.medium
+                )
                 .padding(2.dp),
             value = arrivalTime.value,
             onValueChange = { arrivalTime.value = it },
@@ -218,7 +235,8 @@ fun ProcessAddScreen(
                 .border(
                     width = 1.dp,
                     color = MaterialTheme.colors.onBackground,
-                    shape = MaterialTheme.shapes.medium)
+                    shape = MaterialTheme.shapes.medium
+                )
                 .padding(2.dp),
             value = workload.value,
             onValueChange = { workload.value = it },
