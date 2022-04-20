@@ -15,13 +15,14 @@ import model.ExecuteResult
 
 @Composable
 fun ResultScreen(
-    results: List<ExecuteResult>
+    modifier: Modifier = Modifier,
+    results: List<ExecuteResult>,
+    dummyResultCount: Int = 20
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = 8.dp)
             .customBorder()
-            .height(200.dp)
     ) {
         Box(
             modifier = Modifier
@@ -35,8 +36,8 @@ fun ResultScreen(
                         ResultItem(results[index])
                     }
 
-                    if (5 - results.size > 0) {
-                        items(5 - results.size) {
+                    if (dummyResultCount - results.size > 0) {
+                        items(dummyResultCount - results.size) {
                             DummyResultItem()
                         }
                     }
@@ -52,12 +53,12 @@ fun ResultHeader() {
     Row(modifier = Modifier.fillMaxWidth()
         .height(IntrinsicSize.Min)) {
         listOf(
-            "Process Name",
-            "Arrival Time (AT)",
-            "Burst Time (BT)",
-            "Waiting Time (WT)",
-            "Turnaround Time (TT)",
-            "Normalized Turnaround Time(NTT)"
+            "Process",//"Process Name",
+            "AT",//"Arrival Time (AT)",
+            "BT",//"Burst Time (BT)",
+            "WT",//"Waiting Time (WT)",
+            "TT",//"Turnaround Time (TT)",
+            "NTT"//"Normalized Turnaround Time(NTT)"
         ).apply {
             forEach {
                 Box(

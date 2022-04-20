@@ -1,5 +1,7 @@
 package ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.MaterialTheme
@@ -8,6 +10,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import model.Core
@@ -52,61 +55,79 @@ fun CoreControlPanel(
     onProcessorChange: (Core?) -> Unit,
     utilization: Double
 ) {
-    Column(
-        modifier = modifier
+    Box(
+        modifier
             .padding(horizontal = 8.dp)
-            .height(160.dp)
-            .customBorder()
+            .fillMaxHeight()
+            .customBorder(),
+        contentAlignment = Alignment.TopEnd
     ) {
-        Text(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .padding(top = 8.dp),
-            text = "Core $coreNumber",
-            fontWeight = FontWeight.Bold
-        )
-
-        listOf("OFF", "P-Core", "E-Core").forEach {
-            val opc = {
-                if (enabled) onProcessorChange(
-                    when (it) {
-                        "P-Core" -> Core.PCore("Core $coreNumber [${it}]")
-                        "E-Core" -> Core.ECore("Core $coreNumber [${it}]")
-                        else -> null
-                    },
-                )
-            }
-
-            Row(
-                modifier = Modifier.selectable(
-                    selected = (core?.name ?: "OFF") == it,
-                    onClick = opc
-                ),
-                verticalAlignment = Alignment.CenterVertically
+        core?.process?.let {
+            Box(
+                modifier = Modifier.height(20.dp)
+                    .defaultMinSize(minWidth = 20.dp)
+                    .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
+                    .background(Color(it.processColor))
+                    .padding(horizontal = 4.dp),
+                contentAlignment = Alignment.Center
             ) {
-                RadioButton(
-                    modifier = Modifier.height(36.dp),
-                    enabled = enabled,
-                    selected = when (it) {
-                        "P-Core" -> core is Core.PCore
-                        "E-Core" -> core is Core.ECore
-                        else -> core == null
-                    },
-                    onClick = opc
-                )
-
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = it
-                )
+                Text(text = it.processName, style = MaterialTheme.typography.subtitle1)
             }
         }
 
-        Text(
-            modifier = Modifier
-                .padding(horizontal = 8.dp),
-            text = "${(totalPowerConsumption * 10).roundToInt() / 10.0}W\n${(utilization * 10000).roundToInt() / 100.0}%",
-            style = MaterialTheme.typography.caption
-        )
+        Column(
+            modifier = Modifier.fillMaxHeight()
+        ) {
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .padding(top = 8.dp),
+                text = "Core $coreNumber",
+                fontWeight = FontWeight.Bold
+            )
+
+            listOf("OFF", "P-Core", "E-Core").forEach {
+                val opc = {
+                    if (enabled) onProcessorChange(
+                        when (it) {
+                            "P-Core" -> Core.PCore("Core $coreNumber [${it}]")
+                            "E-Core" -> Core.ECore("Core $coreNumber [${it}]")
+                            else -> null
+                        },
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.selectable(
+                        selected = (core?.name ?: "OFF") == it,
+                        onClick = opc
+                    ).weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        modifier = Modifier,
+                        enabled = enabled,
+                        selected = when (it) {
+                            "P-Core" -> core is Core.PCore
+                            "E-Core" -> core is Core.ECore
+                            else -> core == null
+                        },
+                        onClick = opc
+                    )
+
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = it
+                    )
+                }
+            }
+
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                text = "${(totalPowerConsumption * 10).roundToInt() / 10.0}W\n${(utilization * 10000).roundToInt() / 100.0}%",
+                style = MaterialTheme.typography.caption
+            )
+        }
     }
 }

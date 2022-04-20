@@ -17,7 +17,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -69,6 +73,55 @@ fun MainScreen() {
     }
     var rrQuantum by remember { mutableStateOf(2) }
 
+    val runButtonClicked = {
+        if (isRunning) {
+            selectedAlgorithm.value.stop()
+            uiState = uiState.copy(time = "0s")
+            isRunning = selectedAlgorithm.value.isRunning
+        } else {
+            isRunning = true
+            with(selectedAlgorithm.value) {
+                setCores(cores.filterNotNull())
+                setProcesses(processes)
+                powerConsumptions.clear()
+                cores.forEach { if (it != null) powerConsumptions[it] = mutableListOf() }
+                utilization.clear()
+                cores.forEach { if (it != null) utilization[it] = mutableListOf() }
+
+                runWithTimer(
+                    coroutineScope,
+                    onTimeElapsed = {
+                        totalPowerConsumption.forEach { t, u -> powerConsumptions[t]?.add(u) }
+                        cores.forEach {
+                            if (it != null) {
+                                with(processRecord[it]!!) {
+                                    utilization[it]?.add(mapNotNull { it }.size / size.toDouble())
+                                }
+                            }
+                        }
+                        uiState = uiState.copy(
+                            totalPowerConsumptions = totalPowerConsumption,
+                            readyQueue = readyQueue,
+                            executeResult = endProcesses,
+                            time = "${time}s",
+                            ganttChartMap = processRecord.toGanttChart()
+                        )
+                        coroutineScope.launch {
+                            val offset = (accumulationLevel * 2.5).toInt()
+                            scrollState.animateScrollToItem(with(time - offset) { if (this > 0) this else 0 })
+                        }
+                    },
+                    onEnd = {
+                        uiState = uiState.copy(
+                            time = "${time}s (END)"
+                        )
+                        isRunning = false
+                    }, interval
+                )
+            }
+        }
+    }
+
     MaterialTheme(
         colors = Colors,
         typography = Typography
@@ -95,256 +148,244 @@ fun MainScreen() {
         }
 
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colors.onBackground) {
-            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
-                Column(
-                    modifier = Modifier
-                    //.verticalScroll(rememberScrollState())
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                    ) {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background).padding(8.dp)) {
+                Column {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Row(
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .padding(horizontal = 16.dp)
-                                .border(width = 1.dp, color = MaterialTheme.colors.primaryVariant)
-                                .padding(horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.height(60.dp)
                         ) {
-                            Text(
-                                text = "Algorithm : ",
-                                style = MaterialTheme.typography.subtitle1
-                            )
-                            AlgorithmList(
-                                algorithms = algorithms,
-                                selectedAlgorithm = selectedAlgorithm.value
+                            Row(
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                selectedAlgorithm.value = it
-                            }
-                            RRQuantumSlider(rrQuantum) {
-                                rrQuantum = it
+                                Image(
+                                    modifier = Modifier.padding(8.dp).fillMaxHeight(),
+                                    painter = painterResource("logo_n.png"),
+                                    contentDescription = "",
+                                    contentScale = ContentScale.FillHeight
+                                )
+
+                                Column {
+                                    Text(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                        text = "Process Scheduling Simulator",
+                                        style = MaterialTheme.typography.h5,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                        text = "1st Team v1.0"
+                                    )
+                                }
                             }
 
-                            Button(
-                                onClick = {
-                                    if (isRunning) {
-                                        selectedAlgorithm.value.stop()
-                                        uiState = uiState.copy(time = "0s")
-                                        isRunning = selectedAlgorithm.value.isRunning
-                                    } else {
-                                        isRunning = true
-                                        with(selectedAlgorithm.value) {
-                                            setCores(cores.filterNotNull())
-                                            setProcesses(processes)
-                                            powerConsumptions.clear()
-                                            cores.forEach { if (it != null) powerConsumptions[it] = mutableListOf() }
-                                            utilization.clear()
-                                            cores.forEach { if (it != null) utilization[it] = mutableListOf() }
+                            Row(
+                                modifier = Modifier
+                                    //.weight(4f)
+                                    .padding(horizontal = 8.dp)
+                                    .customBorder()
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            modifier = Modifier.width(100.dp),
+                                            text = "Algorithm : ",
+                                            style = MaterialTheme.typography.subtitle1
+                                        )
+                                        AlgorithmList(
+                                            modifier = Modifier.customBorder(),
+                                            algorithms = algorithms,
+                                            selectedAlgorithm = selectedAlgorithm.value
+                                        ) {
+                                            selectedAlgorithm.value = it
+                                        }
+                                    }
 
-                                            runWithTimer(
-                                                coroutineScope,
-                                                onTimeElapsed = {
-                                                    totalPowerConsumption.forEach { t, u -> powerConsumptions[t]?.add(u) }
-                                                    cores.forEach {
-                                                        if (it != null) {
-                                                            with(processRecord[it]!!) {
-                                                                utilization[it]?.add(mapNotNull { it }.size / size.toDouble())
-                                                            }
-                                                        }
-                                                    }
-                                                    uiState = uiState.copy(
-                                                        totalPowerConsumptions = totalPowerConsumption,
-                                                        readyQueue = readyQueue,
-                                                        executeResult = endProcesses,
-                                                        time = "${time}s",
-                                                        ganttChartMap = processRecord.toGanttChart()
-                                                    )
-                                                    coroutineScope.launch {
-                                                        val offset = (accumulationLevel * 4).toInt()
-                                                        scrollState.animateScrollToItem(with(time - offset) { if (this > 0) this else 0 })
-                                                    }
-                                                },
-                                                onEnd = {
-                                                    uiState = uiState.copy(
-                                                        time = "${time}s (END)"
-                                                    )
-                                                    isRunning = false
-                                                }, interval
-                                            )
+                                    Row(
+                                        modifier = Modifier.padding(top = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RRQuantumSlider(rrQuantum) {
+                                            rrQuantum = it
                                         }
                                     }
                                 }
-                            ) {
-                                Text(if (isRunning) "STOP" else "RUN")
+
+                                Button(
+                                    modifier = Modifier.padding(start = 12.dp).padding(vertical = 2.dp).width(120.dp)
+                                        .fillMaxHeight(),
+                                    onClick = runButtonClicked
+                                ) {
+                                    Text(
+                                        text = if (isRunning) "STOP" else "RUN!!",
+                                        style = MaterialTheme.typography.h6
+                                    )
+                                }
+
+                                Text(
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    text = "Time : ${uiState.time}",
+                                    style = MaterialTheme.typography.subtitle1
+                                )
                             }
-
-                            Text(
-                                text = "Time : ${uiState.time}"
-                            )
                         }
-
-                        Column(
-                            modifier = Modifier.align(Alignment.CenterEnd).width(IntrinsicSize.Min)
-                        ) {
-                            Image(
-                                modifier = Modifier.padding(horizontal = 8.dp).width(200.dp),
-                                painter = painterResource("logo_n.png"),
-                                contentDescription = ""
-                            )
-
-                            Text(
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                text = "1st Team v1.0",
-                                textAlign = TextAlign.End
-                            )
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.height(IntrinsicSize.Min)
-                    ) {
-                        // 프로세스
-                        Column(
+                        Row(
                             modifier = Modifier.weight(1f)
                         ) {
-                            Row {
+                            //프로세서
+                            Row(
+                                modifier = Modifier.weight(3f)
+                            ) {
+                                // 프로세스
+                                Column(
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Row {
+                                        Text(
+                                            modifier = Modifier.padding(8.dp),
+                                            text = "Processes (${processes.size})",
+                                            style = MaterialTheme.typography.subtitle1
+                                        )
+
+                                        Box(modifier = Modifier.padding(8.dp))
+
+                                        Text(
+                                            modifier = Modifier
+                                                .clickable {
+                                                    isFileOpenerOpened = true
+                                                }
+                                                .padding(8.dp),
+                                            text = "Import from..",
+                                            color = MaterialTheme.colors.primary
+                                        )
+
+                                        Text(
+                                            modifier = Modifier
+                                                .clickable {
+                                                    isFileSaverOpened = true
+                                                }
+                                                .padding(8.dp),
+                                            text = "Export to..",
+                                            color = MaterialTheme.colors.primary
+                                        )
+                                    }
+
+                                    ProcessesScreen(
+                                        modifier = Modifier.fillMaxHeight(),
+                                        processes = processes,
+                                        onProcessAdd = {
+                                            processes.add(it)
+                                        }, onProcessDelete = {
+                                            processes.remove(it)
+                                        },
+                                        enabled = !isRunning
+                                    )
+                                }
+                            }
+
+                            Column(
+                                modifier = Modifier.weight(4f)
+                            ) {
+                                //프로세서
                                 Text(
                                     modifier = Modifier.padding(8.dp),
-                                    text = "Processes (${processes.size})",
+                                    text = "Processor",
                                     style = MaterialTheme.typography.subtitle1
                                 )
 
-                                Box(modifier = Modifier.padding(8.dp))
-
-                                Text(
-                                    modifier = Modifier
-                                        .clickable {
-                                            isFileOpenerOpened = true
-                                        }
-                                        .padding(8.dp),
-                                    text = "Import from..",
-                                    color = MaterialTheme.colors.primary
+                                CoresScreen(
+                                    modifier = Modifier.weight(1f),
+                                    cores = cores,
+                                    onProcessorChange = { i, processor ->
+                                        cores[i] = processor
+                                        uiState =
+                                            uiState.copy(
+                                                ganttChartMap = cores.filterNotNull().associateWith { listOf() })
+                                    },
+                                    totalPowerConsumptions = uiState.totalPowerConsumptions,
+                                    utilization = utilization.mapValues { it.value.lastOrNull() ?: 0.0 },
+                                    enabled = !isRunning
                                 )
 
+                                //레디큐
                                 Text(
-                                    modifier = Modifier
-                                        .clickable {
-                                            isFileSaverOpened = true
-                                        }
-                                        .padding(8.dp),
-                                    text = "Export to..",
-                                    color = MaterialTheme.colors.primary
+                                    modifier = Modifier.padding(8.dp),
+                                    text = "Ready Queue",
+                                    style = MaterialTheme.typography.subtitle1
+                                )
+
+                                ReadyQueueList(
+                                    readyQueues = uiState.readyQueue
+                                )
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            //결과
+                            Column(
+                                modifier = Modifier.weight(3f)
+                            ) {
+                                Text(
+                                    modifier = Modifier.padding(8.dp),
+                                    text = "Result",
+                                    style = MaterialTheme.typography.subtitle1
+                                )
+
+                                ResultScreen(
+                                    modifier = Modifier.fillMaxHeight(),
+                                    uiState.executeResult
                                 )
                             }
 
-                            ProcessesScreen(
-                                processes = processes,
-                                onProcessAdd = {
-                                    processes.add(it)
-                                }, onProcessDelete = {
-                                    processes.remove(it)
-                                },
-                                enabled = !isRunning
-                            )
-                        }
+                            Column(
+                                modifier = Modifier.weight(4f)
+                            ) {
 
-                        //프로세서
-                        Column(
-                            modifier = Modifier.weight(1f).fillMaxHeight()
-                        ) {
-                            Text(
-                                modifier = Modifier.padding(8.dp),
-                                text = "Processor",
-                                style = MaterialTheme.typography.subtitle1
-                            )
+                                //간트차트
+                                Row {
+                                    Text(
+                                        modifier = Modifier.padding(8.dp),
+                                        text = "Gantt Chart",
+                                        style = MaterialTheme.typography.subtitle1
+                                    )
 
-                            CoresScreen(
-                                cores = cores,
-                                onProcessorChange = { i, processor ->
-                                    cores[i] = processor
-                                    uiState =
-                                        uiState.copy(ganttChartMap = cores.filterNotNull().associateWith { listOf() })
-                                },
-                                totalPowerConsumptions = uiState.totalPowerConsumptions,
-                                utilization = utilization.mapValues { it.value.lastOrNull() ?: 0.0 },
-                                enabled = !isRunning
-                            )
+                                    Text(
+                                        modifier = Modifier.clickable {
+                                            if (accumulationLevel > 1)
+                                                accumulationLevel /= 2
+                                        }.padding(8.dp),
+                                        text = "+",
+                                        style = MaterialTheme.typography.subtitle1,
+                                        color = MaterialTheme.colors.primary
+                                    )
+
+                                    Text(
+                                        modifier = Modifier.clickable {
+                                            if (accumulationLevel < 32)
+                                                accumulationLevel *= 2
+                                        }.padding(8.dp),
+                                        text = "-",
+                                        style = MaterialTheme.typography.subtitle1,
+                                        color = MaterialTheme.colors.primary
+                                    )
+                                }
+
+                                GanttChart(
+                                    accumulation = maxAccumulation / accumulationLevelAnimate,
+                                    processes = processes,
+                                    ganttChartItems = uiState.ganttChartMap,
+                                    state = scrollState,
+                                    powerConsumptions = powerConsumptions,
+                                    ratios = utilization
+                                )
+                            }
                         }
                     }
-
-                    /*with(selectedAlgorithm.value.requireReadyQueuePerCore) {
-                        Text(
-                            modifier = Modifier.padding(8.dp),
-                            text = if (this) "Ready Queue (Per Core)" else "Ready Queue",
-                            style = MaterialTheme.typography.subtitle1
-                        )
-
-                        if (this) {
-                            PerCoreReadyQueue(
-                                cores = cores,
-                                readyQueues = uiState.readyQueue
-                            )
-                        } else {
-                            SingleReadyQueue(uiState.readyQueue[0])
-                        }
-                    }*/
-
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = "Ready Queue",
-                        style = MaterialTheme.typography.subtitle1
-                    )
-
-                    ReadyQueueList(
-                        readyQueues = uiState.readyQueue
-                    )
-
-                    Row {
-                        Text(
-                            modifier = Modifier.padding(8.dp),
-                            text = "Gantt Chart",
-                            style = MaterialTheme.typography.subtitle1
-                        )
-
-                        Text(
-                            modifier = Modifier.clickable {
-                                if (accumulationLevel > 1)
-                                    accumulationLevel /= 2
-                            }.padding(8.dp),
-                            text = "+",
-                            style = MaterialTheme.typography.subtitle1,
-                            color = MaterialTheme.colors.primary
-                        )
-
-                        Text(
-                            modifier = Modifier.clickable {
-                                if (accumulationLevel < 32)
-                                    accumulationLevel *= 2
-                            }.padding(8.dp),
-                            text = "-",
-                            style = MaterialTheme.typography.subtitle1,
-                            color = MaterialTheme.colors.primary
-                        )
-                    }
-
-                    GanttChart(
-                        accumulation = maxAccumulation / accumulationLevelAnimate,
-                        processes = processes,
-                        ganttChartItems = uiState.ganttChartMap,
-                        state = scrollState,
-                        powerConsumptions = powerConsumptions,
-                        ratios = utilization
-                    )
-
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = "Result",
-                        style = MaterialTheme.typography.subtitle1
-                    )
-
-                    ResultScreen(uiState.executeResult)
-
-                    Box(modifier = Modifier.height(8.dp))
                 }
             }
         }

@@ -13,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
@@ -58,22 +59,22 @@ fun AlgorithmList(
 }
 
 @Composable
-fun RRQuantumSlider(
+fun RowScope.RRQuantumSlider(
     value: Int,
     onValueChange: (Int) -> Unit
 ) {
-    Row {
-        Text(
-            modifier = Modifier.width(100.dp),
-            text = "RR δ"
-        )
-        BasicTextField(
-            value = value.toString(),
-            onValueChange = {
-                onValueChange(it.toIntOrNull() ?: 0)
-            }
-        )
-    }
+    Text(
+        modifier = Modifier.width(100.dp),
+        text = "RR δ"
+    )
+    BasicTextField(
+        modifier = Modifier.customBorder().padding(2.dp),
+        value = value.toString(),
+        onValueChange = {
+            onValueChange(it.toIntOrNull() ?: 0)
+        },
+        textStyle = TextStyle.Default.copy(textAlign = TextAlign.End)
+    )
 }
 
 @Composable

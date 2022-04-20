@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ import kotlin.math.*
 
 @Composable
 fun GanttChart(
+    modifier: Modifier = Modifier,
     accumulation: Dp,
     processes: List<model.Process>,
     ganttChartItems: Map<Core, List<GanttChartItem>>,
@@ -35,7 +37,7 @@ fun GanttChart(
 ) {
     val scrollAmount = state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
     Column(
-        modifier = Modifier.padding(8.dp)
+        modifier = modifier.padding(horizontal = 8.dp)
     ) {
         GanttChartArrivalBar(
             accumulation,
@@ -58,7 +60,7 @@ fun GanttChart(
 }
 
 @Composable
-fun GanttChartGraph(
+fun ColumnScope.GanttChartGraph(
     graphName: String,
     unit: String,
     accumulation: Dp,
@@ -67,9 +69,8 @@ fun GanttChartGraph(
 ) {
     val onlyValues = values.values.flatten()
     val max = (onlyValues.maxOfOrNull { it } ?: (1 / 1.1)) * 1.1
-    val height = 80.dp
     Box(
-        Modifier.height(height)
+        Modifier.weight(4f)
             .fillMaxWidth()
             .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
     ) {
@@ -77,19 +78,24 @@ fun GanttChartGraph(
             modifier = Modifier
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .padding(start = 1.dp)
-                .height(height)
+                .fillMaxHeight()
         ) {
             val colors = coreColors.map { Color(it) }
+            var height = 0
             Canvas(
-                modifier = Modifier.height(height)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .onGloballyPositioned {
+                        height = it.size.height
+                    }
             ) {
                 values.entries.forEachIndexed { index, (name, items) ->
-                    var x1 = Float.NaN
-                    var y1 = Float.NaN
+                    var x1 = 0f
+                    var y1 = 0f
                     items.forEachIndexed { time, value ->
                         if (scrollAmount <= accumulation.toPx() * time + 149.dp.toPx()) {
                             val x2 = accumulation.toPx() * (time + 1) - scrollAmount + 149.dp.toPx()
-                            val y2 = ((1 - value / max) * height.toPx()).toFloat()
+                            val y2 = ((1 - value / max) * height).toFloat()
                             drawCircle(
                                 color = colors[index],
                                 radius = 1.dp.toPx(),
@@ -142,18 +148,18 @@ fun GanttChartGraph(
 }
 
 @Composable
-fun GanttChartArrivalBar(
+fun ColumnScope.GanttChartArrivalBar(
     accumulation: Dp,
     processes: List<model.Process>,
     scrollAmount: Float
 ) {
     Row(
-        Modifier.height(20.dp)
+        Modifier.weight(1f, true)
             .fillMaxWidth()
             .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
     ) {
         Box(
-            modifier = Modifier.height(20.dp)
+            modifier = Modifier.fillMaxHeight()
                 .width(150.dp)
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .padding(horizontal = 4.dp),
@@ -167,7 +173,7 @@ fun GanttChartArrivalBar(
         Box(
             modifier = Modifier
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                .height(20.dp)
+                .fillMaxHeight()
         ) {
             processes.forEachIndexed { i, _ ->
                 if (scrollAmount <= accumulation.toPx() * (processes[i].arrivalTime))
@@ -197,19 +203,19 @@ fun GanttChartArrivalBar(
 }
 
 @Composable
-fun GanttChartBar(
+fun ColumnScope.GanttChartBar(
     accumulation: Dp,
     core: Core,
     ganttChartItems: List<GanttChartItem>,
     scrollAmount: Float
 ) {
     Row(
-        Modifier.height(20.dp)
+        Modifier.weight(1f)
             .fillMaxWidth()
             .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
     ) {
         Box(
-            modifier = Modifier.height(20.dp)
+            modifier = Modifier.fillMaxHeight()
                 .width(150.dp)
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .padding(horizontal = 4.dp),
@@ -225,7 +231,7 @@ fun GanttChartBar(
         Box(
             modifier = Modifier
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                .height(20.dp)
+                .fillMaxHeight()
         ) {
             ganttChartItems.forEachIndexed { i, ganttChartItem ->
                 if (scrollAmount.toDp() <= accumulation * (ganttChartItem.time.last)) {
@@ -252,13 +258,15 @@ fun GanttChartBar(
 }
 
 @Composable
-fun GanttChartScale(
+fun ColumnScope.GanttChartScale(
     accumulation: Dp,
     state: LazyListState
 ) {
     val bigScaleDp = (200 / accumulation.value).toInt() * accumulation
 
-    Row {
+    Row(
+        modifier = Modifier.weight(1f)
+    ) {
         Box(
             modifier = Modifier.width(149.5.dp),
             contentAlignment = Alignment.BottomEnd
@@ -273,7 +281,7 @@ fun GanttChartScale(
         }
         LazyRow(
             modifier = Modifier
-                .height(20.dp),
+                .fillMaxHeight(),
             state = state
         ) {
             items(Int.MAX_VALUE) { i ->
@@ -298,11 +306,11 @@ fun GanttChartScale(
 
                 } else {
                     Box(
-                        modifier = Modifier.width(accumulation).height(18.dp),
+                        modifier = Modifier.width(accumulation).fillMaxHeight(0.9f),
                         contentAlignment = Alignment.TopStart
                     ) {
                         Box(
-                            modifier = Modifier.height(9.dp).width(1.dp)
+                            modifier = Modifier.fillMaxHeight(0.45f).width(1.dp)
                                 .background(MaterialTheme.colors.onBackground)
                         )
                     }

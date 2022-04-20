@@ -25,16 +25,17 @@ var processColorCount = 0
 
 @Composable
 fun ProcessesScreen(
+    modifier: Modifier = Modifier,
     processes: List<Process>,
     enabled: Boolean,
+    dummyProcessCount: Int = 20,
     onProcessAdd: (Process) -> Unit,
     onProcessDelete: (Process) -> Unit
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = 8.dp)
             .customBorder()
-            .height(160.dp)
     ) {
         Box(
             modifier = Modifier
@@ -48,8 +49,8 @@ fun ProcessesScreen(
                         ProcessItem(processes[index], onProcessDelete)
                     }
 
-                    if(10 - processes.size > 0) {
-                        items(10 - processes.size) {
+                    if(dummyProcessCount - processes.size > 0) {
+                        items(dummyProcessCount - processes.size) {
                             DummyProcessItem()
                         }
                     }
