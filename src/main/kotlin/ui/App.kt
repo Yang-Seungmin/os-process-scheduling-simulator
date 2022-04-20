@@ -252,12 +252,15 @@ fun MainScreen() {
                                             text = "Interval "
                                         )
                                         BasicTextField(
-                                            modifier = Modifier.customBorder().padding(2.dp),
+                                            modifier = Modifier.weight(1f).customBorder().padding(2.dp),
                                             value = interval.toString(),
                                             onValueChange = {
                                                 interval = it.toLongOrNull() ?: 100
                                             },
                                             textStyle = TextStyle.Default.copy(textAlign = TextAlign.End)
+                                        )
+                                        Text(
+                                            text = " ms"
                                         )
                                     }
                                 }
