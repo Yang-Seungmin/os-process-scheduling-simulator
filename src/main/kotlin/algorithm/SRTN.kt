@@ -7,14 +7,14 @@ import kotlin.math.roundToInt
 
 class SRTN : SchedulingAlgorithm("SRTN") {
 
-    private fun pollShortestProcess() : model.Process? {
-        val process = singleReadyQueue.minByOrNull { it.workload }
+    private fun pollShortestProcess(): model.Process? {
+        val process = singleReadyQueue.minByOrNull { it.workload - it.doneWorkload }
         singleReadyQueue.remove(process)
         return process
     }
 
-    private fun peekShortestProcess() : model.Process? {
-        val process = singleReadyQueue.minByOrNull { it.workload }
+    private fun peekShortestProcess(): model.Process? {
+        val process = singleReadyQueue.minByOrNull { it.workload - it.doneWorkload }
         return process
     }
 
@@ -35,7 +35,7 @@ class SRTN : SchedulingAlgorithm("SRTN") {
             _totalPowerConsumption[core] = _totalPowerConsumption.getOrDefault(core, 0.0) + powerConsumption
 
             // For gantt chart
-            if(_processRecord[core] == null) _processRecord[core] = mutableListOf()
+            if (_processRecord[core] == null) _processRecord[core] = mutableListOf()
             _processRecord[core]!!.add(core.process)
         }
 
@@ -52,7 +52,11 @@ class SRTN : SchedulingAlgorithm("SRTN") {
                     _endProcesses.add(ExecuteResult(process, (time - process.arrivalTime)))
                     core.process = null
                 } else {
-                    if(process.workload - process.doneWorkload > (peekShortestProcess()?.doneWorkload ?: Int.MAX_VALUE)) {
+                    val processRemainingWorkload = process.workload - process.doneWorkload
+                    val shortestProcessRemainingWorkload =
+                        peekShortestProcess()?.let { it.workload - it.doneWorkload } ?: Int.MAX_VALUE
+
+                    if (processRemainingWorkload >= shortestProcessRemainingWorkload) {
                         singleReadyQueue.add(process)
                         core.process = null
                     }
