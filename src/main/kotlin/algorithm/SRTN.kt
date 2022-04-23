@@ -5,17 +5,17 @@ import model.ExecuteResult
 import java.util.LinkedList
 import kotlin.math.roundToInt
 
-class RR : SchedulingAlgorithm("RR") {
+class SRTN : SchedulingAlgorithm("SRTN") {
 
-    var rrQuantum = 2
-    val resideTimes = mutableMapOf<Core, Pair<model.Process?, Int>>()
+    private fun pollShortestProcess() : model.Process? {
+        val process = singleReadyQueue.minByOrNull { it.workload }
+        singleReadyQueue.remove(process)
+        return process
+    }
 
-    override fun init() {
-        super.init()
-        resideTimes.clear()
-        cores.forEach { core ->
-            resideTimes[core] = (null to 0)
-        }
+    private fun peekShortestProcess() : model.Process? {
+        val process = singleReadyQueue.minByOrNull { it.workload }
+        return process
     }
 
     override fun run() {
@@ -28,15 +28,11 @@ class RR : SchedulingAlgorithm("RR") {
 
         cores.forEachIndexed { i, core ->
             if (core.process == null && readyQueue.isNotEmpty())
-                core.process = singleReadyQueue.poll()
+                core.process = pollShortestProcess()
 
             // Increase cpu total power consumption
             val powerConsumption = if (core.process == null) core.idlePowerConsumption else core.powerConsumption
             _totalPowerConsumption[core] = _totalPowerConsumption.getOrDefault(core, 0.0) + powerConsumption
-
-            resideTimes[core]?.let {
-                resideTimes[core] = core.process to ( if(it.first == core.process) it.second + 1 else 1 )
-            }
 
             // For gantt chart
             if(_processRecord[core] == null) _processRecord[core] = mutableListOf()
@@ -56,8 +52,7 @@ class RR : SchedulingAlgorithm("RR") {
                     _endProcesses.add(ExecuteResult(process, (time - process.arrivalTime)))
                     core.process = null
                 } else {
-                    // If reside time is greater than rr quantum, preempt
-                    if((resideTimes[core]?.second ?: 0) >= rrQuantum) {
+                    if(process.workload - process.doneWorkload > (peekShortestProcess()?.doneWorkload ?: Int.MAX_VALUE)) {
                         singleReadyQueue.add(process)
                         core.process = null
                     }
@@ -69,7 +64,9 @@ class RR : SchedulingAlgorithm("RR") {
     override fun printStatus() {
         print("[%3ds]".format(time))
         cores.forEachIndexed { index, core ->
-            print(" Core $index[${core.process?.processName ?: "(Empty)"}][${((totalPowerConsumption[core] ?: 0.0) * 10).roundToInt() / 10.0}W]")
+            core.process?.let {
+                print(" Core $index[${it.processName}, ${it.workload - it.doneWorkload}][${((totalPowerConsumption[core] ?: 0.0) * 10).roundToInt() / 10.0}W]")
+            }
         }
         print(" Ready Queue: ${singleReadyQueue.joinToString(prefix = "[", postfix = "]") { it.processName }} ")
         print(
@@ -78,14 +75,6 @@ class RR : SchedulingAlgorithm("RR") {
                     prefix = "[",
                     postfix = "]"
                 ) { "${it.process.processName} : ${it.turnaroundTime}" }
-            }"
-        )
-        print(
-            " Reside time: ${
-                resideTimes.values.joinToString(
-                    prefix = "[",
-                    postfix = "]"
-                ) { (process, resideTime) -> "${process?.processName ?: "Empty"} : $resideTime" }
             }"
         )
         println()

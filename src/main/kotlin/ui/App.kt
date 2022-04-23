@@ -71,7 +71,7 @@ fun MainScreen() {
     var uiState by remember { mutableStateOf(UiState.default()) }
 
     val algorithms = listOf<SchedulingAlgorithm>(
-        FCFS(), RR(), SPN(), HRRN()
+        FCFS(), RR(), SPN(), SRTN(), HRRN()
     )
     val selectedAlgorithm = rememberSaveable {
         mutableStateOf<SchedulingAlgorithm>(algorithms[0])
