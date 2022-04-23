@@ -1,9 +1,6 @@
 package ui
 
-import algorithm.FCFS
-import algorithm.RR
-import algorithm.SPN
-import algorithm.SchedulingAlgorithm
+import algorithm.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
@@ -74,7 +71,7 @@ fun MainScreen() {
     var uiState by remember { mutableStateOf(UiState.default()) }
 
     val algorithms = listOf<SchedulingAlgorithm>(
-        FCFS(), RR(), SPN()
+        FCFS(), RR(), SPN(), HRRN()
     )
     val selectedAlgorithm = rememberSaveable {
         mutableStateOf<SchedulingAlgorithm>(algorithms[0])
