@@ -8,7 +8,7 @@ class HRRN : SchedulingAlgorithm("HRRN") {
         super.init()
     }
 
-    private fun pollShortestProcess() : model.Process? {
+    private fun pollHighResponseRatioProcess() : model.Process? {
         var process : model.Process? = null
         singleReadyQueue.forEach {
             if (process == null) {
@@ -33,7 +33,7 @@ class HRRN : SchedulingAlgorithm("HRRN") {
 
         cores.forEachIndexed { i, core ->
             if (core.process == null && readyQueue.isNotEmpty())
-                core.process = pollShortestProcess()
+                core.process = pollHighResponseRatioProcess()
 
             val powerConsumption = if (core.process == null) core.idlePowerConsumption else core.powerConsumption
 
