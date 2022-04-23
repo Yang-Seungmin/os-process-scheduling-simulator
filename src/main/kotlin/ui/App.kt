@@ -117,7 +117,7 @@ fun MainScreen() {
                             ganttChartMap = processRecord.toGanttChart()
                         )
                         coroutineScope.launch {
-                            println(listOf(offset, autoScrollThreshold, maxAccumulation, accumulationLevel))
+                            //println(listOf(offset, autoScrollThreshold, maxAccumulation, accumulationLevel))
                             scrollState.animateScrollToItem(with(time - offset) { if (this > 0) this else 0 })
                         }
                     },
