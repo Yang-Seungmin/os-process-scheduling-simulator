@@ -32,7 +32,7 @@ fun GanttChart(
     processes: List<model.Process>,
     ganttChartItems: Map<Core, List<GanttChartItem>>,
     powerConsumptions: Map<Core, List<Double>>,
-    ratios: Map<Core, List<Double>>,
+    utilizations: Map<Core, List<Double>>,
     state: LazyListState
 ) {
     val scrollAmount = state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
@@ -52,8 +52,20 @@ fun GanttChart(
                 scrollAmount
             )
         }
-        GanttChartGraph("Power consumption graph", "W", accumulation, powerConsumptions.mapKeys { it.key.name }, scrollAmount)
-        GanttChartGraph("Utilization", "%", accumulation, ratios.mapKeys { it.key.name }.mapValues { it.value.map { (it * 10000).roundToInt() / 100.0 } }, scrollAmount)
+        GanttChartGraph(
+            "Power consumption graph",
+            "W",
+            accumulation,
+            powerConsumptions.mapKeys { it.key.name },
+            scrollAmount
+        )
+        GanttChartGraph(
+            "Utilization",
+            "%",
+            accumulation,
+            utilizations.mapKeys { it.key.name }.mapValues { it.value.map { (it * 10000).roundToInt() / 100.0 } },
+            scrollAmount
+        )
 
         GanttChartScale(accumulation, state)
     }
@@ -69,6 +81,7 @@ fun ColumnScope.GanttChartGraph(
 ) {
     val onlyValues = values.values.flatten()
     val max = (onlyValues.maxOfOrNull { it } ?: (1 / 1.1)) * 1.1
+    var width = 0
     Box(
         Modifier.weight(4f)
             .fillMaxWidth()
@@ -79,6 +92,9 @@ fun ColumnScope.GanttChartGraph(
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .padding(start = 1.dp)
                 .fillMaxHeight()
+                .onGloballyPositioned {
+                    width = it.size.width
+                }
         ) {
             val colors = coreColors.map { Color(it) }
             var height = 0
@@ -94,21 +110,24 @@ fun ColumnScope.GanttChartGraph(
                     var y1 = 0f
                     items.forEachIndexed { time, value ->
                         if (scrollAmount <= accumulation.toPx() * time + 149.dp.toPx()) {
-                            val x2 = accumulation.toPx() * (time + 1) - scrollAmount + 149.dp.toPx()
+                            val x2 = accumulation.toPx() * time - scrollAmount + 149.dp.toPx()
                             val y2 = ((1 - value / max) * height).toFloat()
-                            drawCircle(
-                                color = colors[index],
-                                radius = 1.dp.toPx(),
-                                center = Offset(x2, y2)
-                            )
 
-                            if (!x1.isNaN() && !y1.isNaN()) {
-                                drawLine(
+                            if (x2 <= width) {
+                                drawCircle(
                                     color = colors[index],
-                                    start = Offset(x1, y1),
-                                    end = Offset(x2, y2),
-                                    strokeWidth = 1.dp.toPx()
+                                    radius = 1.dp.toPx(),
+                                    center = Offset(x2, y2)
                                 )
+
+                                if (!x1.isNaN() && !y1.isNaN()) {
+                                    drawLine(
+                                        color = colors[index],
+                                        start = Offset(x1, y1),
+                                        end = Offset(x2, y2),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
                             }
 
                             x1 = x2

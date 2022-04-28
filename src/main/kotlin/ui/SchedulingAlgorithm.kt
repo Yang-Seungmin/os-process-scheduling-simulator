@@ -1,21 +1,16 @@
 package ui
 
-import algorithm.SchedulingAlgorithm
-import androidx.compose.foundation.border
+import schedulingalgorithm.SchedulingAlgorithm
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -75,13 +70,4 @@ fun RowScope.RRQuantumSlider(
         },
         textStyle = TextStyle.Default.copy(textAlign = TextAlign.End)
     )
-}
-
-@Composable
-fun Modifier.customBorder(): Modifier {
-    return this
-        .border(
-            width = 1.dp,
-            color = MaterialTheme.colors.surface
-        )
 }
