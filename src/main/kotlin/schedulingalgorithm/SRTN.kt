@@ -8,15 +8,14 @@ class SRTN : SchedulingAlgorithm(
     readyQueueSize = 1
 ) {
 
-    private fun pollShortestProcess(): Process? {
+    private fun pollShortestRemainingProcess(): Process? {
         val process = singleReadyQueue.minByOrNull { it.remainWorkload }
         singleReadyQueue.remove(process)
         return process
     }
 
-    private fun peekShortestProcess(): Process? {
-        val process = singleReadyQueue.minByOrNull { it.remainWorkload }
-        return process
+    private fun peekShortestRemainingProcess(): Process? {
+        return singleReadyQueue.minByOrNull { it.remainWorkload }
     }
 
     override fun putProcessIntoReadyQueue(processes: List<Process>) {
@@ -28,11 +27,11 @@ class SRTN : SchedulingAlgorithm(
     override fun beforeWork(time: Int) {
         cores.forEachIndexed { i, core ->
             if (readyQueue.isNotEmpty()) {
-                if (core.process == null) core.process = pollShortestProcess()
+                if (core.process == null) core.process = pollShortestRemainingProcess()
                 else {
-                    if ((peekShortestProcess()?.remainWorkload ?: Int.MAX_VALUE) < core.process!!.remainWorkload) {
+                    if ((peekShortestRemainingProcess()?.remainWorkload ?: Int.MAX_VALUE) < core.process!!.remainWorkload) {
                         singleReadyQueue.add(core.process)
-                        core.process = pollShortestProcess()
+                        core.process = pollShortestRemainingProcess()
                     }
                 }
             }
