@@ -1,9 +1,8 @@
-package algorithm.queue
+package schedulingalgorithm.queue
 
 import model.Process
 import java.util.*
 import kotlin.NoSuchElementException
-import kotlin.collections.ArrayList
 
 class SPNQueue(override val size: Int = 0) : Queue<Process> by LinkedList() {
 

@@ -13,42 +13,43 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
+import manager.CoreManager
 import model.Core
 import kotlin.math.roundToInt
 
 @Composable
 fun CoresScreen(
     modifier: Modifier = Modifier,
-    cores: List<Core?>,
+    coreManager: CoreManager,
     enabled: Boolean,
     totalPowerConsumptions: Map<Core, Double>,
     utilization: Map<Core, Double>,
-    onProcessorChange: (Int, Core?) -> Unit
+    onCoreChange: (Int, Core?) -> Unit
 ) {
     Row(
         modifier = modifier.fillMaxWidth()
     ) {
-        cores.forEachIndexed { index, core ->
+        coreManager.coreState.forEachIndexed { index, core ->
             CoreControlPanel(
-                modifier = Modifier.weight(1f / cores.size),
+                modifier = Modifier.weight(1f / coreManager.coreState.size),
                 core = core,
                 coreNumber = index,
                 onProcessorChange = {
-                    onProcessorChange(index, it)
+                    onCoreChange(index, it)
                 },
                 totalPowerConsumption = totalPowerConsumptions[core] ?: 0.0,
                 utilization = utilization[core] ?: 0.0,
-                enabled = enabled
+                enabled = enabled,
+                coreManager = coreManager
             )
         }
     }
 }
 
-
 @Composable
 fun CoreControlPanel(
     modifier: Modifier = Modifier,
+    coreManager: CoreManager,
     enabled: Boolean,
     coreNumber: Int,
     core: Core?,
@@ -92,9 +93,9 @@ fun CoreControlPanel(
                 val opc = {
                     if (enabled) onProcessorChange(
                         when (it) {
-                            "P-Core" -> Core.PCore("Core $coreNumber [${it}]")
-                            "E-Core" -> Core.ECore("Core $coreNumber [${it}]")
-                            else -> null
+                            "P-Core" -> coreManager.setPCore(coreNumber)
+                            "E-Core" -> coreManager.setECore(coreNumber)
+                            else -> coreManager.setCoreOff(coreNumber)
                         },
                     )
                 }

@@ -20,19 +20,25 @@ repositories {
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("io.insert-koin:koin-core:3.1.6")
 }
 
-tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "11"
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "15"
 }
 
 compose.desktop {
     application {
+        javaHome = System.getenv("JDK_17")
+    }
+    application {
         mainClass = "SchedulingSimulator"
         nativeDistributions {
+            modules("java.instrument", "jdk.unsupported")
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "OS_Process_Scheduling_Simulator"
             packageVersion = "1.0.0"
         }
     }
 }
+val compileKotlin: KotlinCompile by tasks

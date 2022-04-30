@@ -1,6 +1,7 @@
 package model
 
 import kotlinx.serialization.Transient
+import model.Process
 
 @kotlinx.serialization.Serializable
 data class Process(
@@ -12,3 +13,5 @@ data class Process(
     @Transient var doneWorkload: Int = 0,
     @Transient var burstTime: Int = 0
 )
+
+val Process.remainWorkload get() = workload - doneWorkload

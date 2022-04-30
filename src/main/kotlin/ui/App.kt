@@ -1,6 +1,6 @@
 package ui
 
-import algorithm.*
+import schedulingalgorithm.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
@@ -25,9 +25,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
+import manager.CoreManager
 import model.Process
-import model.Core
-import util.toGanttChart
+import ui.state.UiState
 import util.toPx
 import java.io.File
 import kotlin.math.roundToInt
@@ -35,86 +35,57 @@ import kotlin.math.roundToInt
 
 @Composable
 @Preview
-fun MainScreen() {
-    val maxAccumulation = 160.dp
-    var isFileOpenerOpened by remember { mutableStateOf(false) }
-    var isFileSaverOpened by remember { mutableStateOf(false) }
+fun MainScreen(
+    schedulingAlgorithmRunner: SchedulingAlgorithmRunner,
+    coreManager: CoreManager
+) {
+    //For algorithm
+    val coroutineScope = rememberCoroutineScope()
     var isRunning by remember { mutableStateOf(false) }
     var interval by remember { mutableStateOf(100L) }
+    val selectedAlgorithm = rememberSaveable { mutableStateOf(schedulingAlgorithmRunner.schedulingAlgorithm) }
+    var rrQuantum by remember { mutableStateOf(2) }
+
+    //For chart accumulation
+    val maxAccumulation = 160.dp
     var accumulationLevel by remember { mutableStateOf(8f) }
     val accumulationLevelAnimate by animateFloatAsState(accumulationLevel)
-    val coroutineScope = rememberCoroutineScope()
-    val scrollState = rememberLazyListState()
-    var autoScrollThreshold by remember { mutableStateOf(0) }
-    var offset by remember { mutableStateOf(0) }
 
+    //For scroll
+    var autoScrollThreshold by remember { mutableStateOf(0) }
+    val scrollState = rememberLazyListState()
+    var offset by remember { mutableStateOf(0) }
     offset = (autoScrollThreshold / (maxAccumulation / accumulationLevel).toPx()).roundToInt()
 
-    val processScrollState = rememberLazyListState()
+    //For file
+    var isFileOpenerOpened by remember { mutableStateOf(false) }
+    var isFileSaverOpened by remember { mutableStateOf(false) }
 
+    //For process
+    val processScrollState = rememberLazyListState()
     val processes = rememberSaveable { mutableStateListOf<Process>() }
-    val cores = rememberSaveable {
-        mutableStateListOf<Core?>(
-            Core.PCore("Core 0 [P-Core]"),
-            Core.PCore("Core 1 [P-Core]"),
-            Core.ECore("Core 2 [E-Core]"),
-            Core.ECore("Core 3 [E-Core]")
-        )
-    }
-    val powerConsumptions = rememberSaveable {
-        mutableStateMapOf<Core, MutableList<Double>>()
-    }
-    val utilization = rememberSaveable {
-        mutableStateMapOf<Core, MutableList<Double>>()
-    }
 
     var uiState by remember { mutableStateOf(UiState.default()) }
 
-    val algorithms = listOf<SchedulingAlgorithm>(
-        FCFS(), RR(), SPN(), SRTN(), HRRN()
-    )
-    val selectedAlgorithm = rememberSaveable {
-        mutableStateOf<SchedulingAlgorithm>(algorithms[0])
-    }
-    var rrQuantum by remember { mutableStateOf(2) }
-
-    val runButtonClicked = {
+    val runButtonClicked: () -> Unit = {
         if (isRunning) {
-            selectedAlgorithm.value.stop()
+            schedulingAlgorithmRunner.stop()
             uiState = uiState.copy(time = "0s")
-            isRunning = selectedAlgorithm.value.isRunning
+            isRunning = schedulingAlgorithmRunner.isRunning
         } else {
             isRunning = true
-            with(selectedAlgorithm.value) {
-                if (this is RR) this.rrQuantum = rrQuantum
+            with(schedulingAlgorithmRunner) {
+                if (schedulingAlgorithm is RR) (schedulingAlgorithm as RR).rrQuantum = rrQuantum
 
-                setCores(cores.filterNotNull())
+                setCores(coreManager.cores.filterNotNull())
                 setProcesses(processes)
-                powerConsumptions.clear()
-                cores.forEach { if (it != null) powerConsumptions[it] = mutableListOf() }
-                utilization.clear()
-                cores.forEach { if (it != null) utilization[it] = mutableListOf() }
 
-                runWithTimer(
-                    coroutineScope,
+                coroutineScope.run(
                     onTimeElapsed = {
-                        totalPowerConsumption.forEach { t, u -> powerConsumptions[t]?.add(u) }
-                        cores.forEach {
-                            if (it != null) {
-                                with(processRecord[it]!!) {
-                                    utilization[it]?.add(mapNotNull { it }.size / size.toDouble())
-                                }
-                            }
-                        }
-                        uiState = uiState.copy(
-                            totalPowerConsumptions = totalPowerConsumption,
-                            readyQueue = readyQueue,
-                            executeResult = endProcesses,
-                            time = "${time}s",
-                            ganttChartMap = processRecord.toGanttChart()
-                        )
+
+                        uiState = refreshUiState(uiState)
+
                         coroutineScope.launch {
-                            //println(listOf(offset, autoScrollThreshold, maxAccumulation, accumulationLevel))
                             scrollState.animateScrollToItem(with(time - offset) { if (this > 0) this else 0 })
                         }
                     },
@@ -181,7 +152,7 @@ fun MainScreen() {
                                     )
                                     Text(
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                        text = "1st Team v1.0"
+                                        text = "1st Team v1.0.0"
                                     )
                                 }
                             }
@@ -205,9 +176,10 @@ fun MainScreen() {
                                         )
                                         AlgorithmList(
                                             modifier = Modifier.customBorder(),
-                                            algorithms = algorithms,
+                                            algorithms = schedulingAlgorithmRunner.schedulingAlgorithms,
                                             selectedAlgorithm = selectedAlgorithm.value
                                         ) {
+                                            schedulingAlgorithmRunner.schedulingAlgorithm = it
                                             selectedAlgorithm.value = it
                                         }
                                     }
@@ -334,15 +306,16 @@ fun MainScreen() {
 
                                 CoresScreen(
                                     modifier = Modifier.weight(1f),
-                                    cores = cores,
-                                    onProcessorChange = { i, processor ->
-                                        cores[i] = processor
+                                    coreManager = coreManager,
+                                    onCoreChange = { i, core ->
                                         uiState =
                                             uiState.copy(
-                                                ganttChartMap = cores.filterNotNull().associateWith { listOf() })
+                                                ganttChartMap = coreManager.cores.filterNotNull()
+                                                    .associateWith { listOf() }
+                                            )
                                     },
                                     totalPowerConsumptions = uiState.totalPowerConsumptions,
-                                    utilization = utilization.mapValues { it.value.lastOrNull() ?: 0.0 },
+                                    utilization = uiState.utilizationTimeLine.mapValues { it.value.lastOrNull() ?: 0.0 },
                                     enabled = !isRunning
                                 )
 
@@ -418,8 +391,8 @@ fun MainScreen() {
                                     processes = processes,
                                     ganttChartItems = uiState.ganttChartMap,
                                     state = scrollState,
-                                    powerConsumptions = powerConsumptions,
-                                    ratios = utilization
+                                    powerConsumptions = uiState.powerConsumptionTimeLine,
+                                    utilizations = uiState.utilizationTimeLine
                                 )
                             }
                         }

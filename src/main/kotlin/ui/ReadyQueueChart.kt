@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import model.Process
 import model.Core
 import java.util.*
-import kotlin.collections.ArrayList
 
 @Composable
 fun PerCoreReadyQueue(
