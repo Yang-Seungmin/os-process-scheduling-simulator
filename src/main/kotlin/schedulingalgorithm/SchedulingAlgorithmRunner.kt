@@ -80,7 +80,7 @@ class SchedulingAlgorithmRunner {
 
                 // 간트 차트 생성용
                 cores.forEach { core ->
-                    if (afterProcess[core] == null && beforeProcess[core] != null) {
+                    if (beforeProcess[core] != null && beforeProcess[core] != afterProcess[core]) {
                         ganttChartRecord[core]?.add(
                             GanttChartItem(
                                 process = beforeProcess[core]!!,

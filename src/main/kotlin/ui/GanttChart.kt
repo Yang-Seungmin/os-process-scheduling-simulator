@@ -113,7 +113,7 @@ fun ColumnScope.GanttChartGraph(
                             val x2 = accumulation.toPx() * time - scrollAmount + 149.dp.toPx()
                             val y2 = ((1 - value / max) * height).toFloat()
 
-                            if (x2 <= width) {
+                            //if (x2 <= width) {
                                 drawCircle(
                                     color = colors[index],
                                     radius = 1.dp.toPx(),
@@ -128,7 +128,7 @@ fun ColumnScope.GanttChartGraph(
                                         strokeWidth = 1.dp.toPx()
                                     )
                                 }
-                            }
+                            //}
 
                             x1 = x2
                             y1 = y2

@@ -39,19 +39,5 @@ class SRTN : SchedulingAlgorithm(
         }
     }
 
-    override fun afterWork(time: Int) {
-        cores.forEach { core ->
-            core.process?.let { process ->
-                val processRemainingWorkload = process.workload - process.doneWorkload
-
-                val shortestProcessRemainingWorkload =
-                    peekShortestProcess()?.let { it.workload - it.doneWorkload } ?: Int.MAX_VALUE
-
-                if (processRemainingWorkload >= shortestProcessRemainingWorkload) {
-                    singleReadyQueue.add(process)
-                    core.process = null
-                }
-            }
-        }
-    }
+    override fun afterWork(time: Int) {}
 }

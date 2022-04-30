@@ -29,16 +29,15 @@ tasks.withType<KotlinCompile> {
 
 compose.desktop {
     application {
+        javaHome = System.getenv("JDK_17")
+    }
+    application {
         mainClass = "SchedulingSimulator"
         nativeDistributions {
             modules("java.instrument", "jdk.unsupported")
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "OS_Process_Scheduling_Simulator"
             packageVersion = "1.0.0"
-
-            description = "Compose Example App"
-            copyright = "© 2020 My Name. All rights reserved."
-            vendor = "Example vendor"
         }
     }
 }
