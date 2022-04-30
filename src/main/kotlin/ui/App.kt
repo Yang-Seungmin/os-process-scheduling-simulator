@@ -39,6 +39,7 @@ fun MainScreen(
     schedulingAlgorithmRunner: SchedulingAlgorithmRunner,
     coreManager: CoreManager
 ) {
+    val cores = remember { coreManager.cores.toMutableStateList() }
     //For algorithm
     val coroutineScope = rememberCoroutineScope()
     var isRunning by remember { mutableStateOf(false) }
@@ -298,11 +299,33 @@ fun MainScreen(
                                 modifier = Modifier.weight(4f)
                             ) {
                                 //프로세서
-                                Text(
-                                    modifier = Modifier.padding(8.dp),
-                                    text = "Processor",
-                                    style = MaterialTheme.typography.subtitle1
-                                )
+                                Row {
+                                    Text(
+                                        modifier = Modifier.padding(8.dp),
+                                        text = "Processor",
+                                        style = MaterialTheme.typography.subtitle1
+                                    )
+
+                                    Text(
+                                        modifier = Modifier.clickable {
+                                            if(!isRunning)
+                                            coreManager.addCore()
+                                        }.padding(8.dp),
+                                        text = "+",
+                                        style = MaterialTheme.typography.subtitle1,
+                                        color = MaterialTheme.colors.primary
+                                    )
+
+                                    Text(
+                                        modifier = Modifier.clickable {
+                                            if(!isRunning)
+                                            coreManager.removeCore()
+                                        }.padding(8.dp),
+                                        text = "-",
+                                        style = MaterialTheme.typography.subtitle1,
+                                        color = MaterialTheme.colors.primary
+                                    )
+                                }
 
                                 CoresScreen(
                                     modifier = Modifier.weight(1f),
@@ -316,18 +339,8 @@ fun MainScreen(
                                     },
                                     totalPowerConsumptions = uiState.totalPowerConsumptions,
                                     utilization = uiState.utilizationTimeLine.mapValues { it.value.lastOrNull() ?: 0.0 },
-                                    enabled = !isRunning
-                                )
-
-                                //레디큐
-                                Text(
-                                    modifier = Modifier.padding(8.dp),
-                                    text = "Ready Queue",
-                                    style = MaterialTheme.typography.subtitle1
-                                )
-
-                                ReadyQueueList(
-                                    readyQueues = uiState.readyQueue
+                                    enabled = !isRunning,
+                                    coreList = coreManager.coreState
                                 )
                             }
                         }
@@ -353,6 +366,16 @@ fun MainScreen(
                             Column(
                                 modifier = Modifier.weight(4f)
                             ) {
+                                //레디큐
+                                Text(
+                                    modifier = Modifier.padding(8.dp),
+                                    text = "Ready Queue",
+                                    style = MaterialTheme.typography.subtitle1
+                                )
+
+                                ReadyQueueList(
+                                    readyQueues = uiState.readyQueue
+                                )
 
                                 //간트차트
                                 Row {
@@ -390,9 +413,7 @@ fun MainScreen(
                                     accumulation = maxAccumulation / accumulationLevelAnimate,
                                     processes = processes,
                                     ganttChartItems = uiState.ganttChartMap,
-                                    state = scrollState,
-                                    powerConsumptions = uiState.powerConsumptionTimeLine,
-                                    utilizations = uiState.utilizationTimeLine
+                                    state = scrollState
                                 )
                             }
                         }

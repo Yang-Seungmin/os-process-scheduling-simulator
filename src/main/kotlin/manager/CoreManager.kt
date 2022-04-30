@@ -12,12 +12,17 @@ class CoreManager {
         Core.PCore("Core 1 [P-Core]"),
         Core.ECore("Core 2 [E-Core]"),
         Core.ECore("Core 3 [E-Core]")
-    )
+    ).toMutableStateList()
     val cores : List<Core?> get() = _cores
+    val coreState : SnapshotStateList<Core?> get() = _cores
 
-    @get:Composable
-    val coreState: SnapshotStateList<Core?>
-        get() = cores.toMutableStateList()
+    fun addCore() {
+        _cores.add(Core.PCore("Core ${_cores.size} [P-Core]"))
+    }
+
+    fun removeCore() {
+        _cores.removeLast()
+    }
 
     fun setPCore(index: Int) : Core? {
         _cores[index] = Core.PCore("Core $index [P-Core]")

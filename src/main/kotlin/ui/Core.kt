@@ -11,36 +11,70 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import manager.CoreManager
 import model.Core
+import util.toPx
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
+
 
 @Composable
 fun CoresScreen(
     modifier: Modifier = Modifier,
     coreManager: CoreManager,
+    coreList: List<Core?>,
     enabled: Boolean,
     totalPowerConsumptions: Map<Core, Double>,
     utilization: Map<Core, Double>,
     onCoreChange: (Int, Core?) -> Unit
 ) {
-    Row(
+    val sum = totalPowerConsumptions.values.sum()
+    Column(
         modifier = modifier.fillMaxWidth()
     ) {
-        coreManager.coreState.forEachIndexed { index, core ->
-            CoreControlPanel(
-                modifier = Modifier.weight(1f / coreManager.coreState.size),
-                core = core,
-                coreNumber = index,
-                onProcessorChange = {
-                    onCoreChange(index, it)
-                },
-                totalPowerConsumption = totalPowerConsumptions[core] ?: 0.0,
-                utilization = utilization[core] ?: 0.0,
-                enabled = enabled,
-                coreManager = coreManager
+        Column(
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) {
+            val columnSize = if((sqrt(coreList.size.toDouble() * 2)).roundToInt() > 4) (sqrt(coreList.size.toDouble() * 2)).roundToInt() else 4
+
+            coreList.chunked(columnSize).forEachIndexed { index1, cores ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().weight(1f)
+                ) {
+                    cores.forEachIndexed { index2, core ->
+                        CoreControlPanel(
+                            modifier = Modifier.weight(1f),
+                            core = core,
+                            coreNumber = (index1 * columnSize) + index2,
+                            onProcessorChange = {
+                                onCoreChange((index1 * columnSize) + index2, it)
+                            },
+                            totalPowerConsumption = totalPowerConsumptions[core] ?: 0.0,
+                            utilization = utilization[core] ?: 0.0,
+                            enabled = enabled,
+                            coreManager = coreManager
+                        )
+                    }
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            CoreInfoBox(
+                modifier = Modifier.weight(1f),
+                name = "Total power consumption",
+                value = "${String.format("%.1f", sum)}W"
+            )
+            CoreInfoBox(
+                modifier = Modifier.weight(1f),
+                name = "Avg. utilization",
+                value = "${String.format("%.2f", utilization.values.average() * 100)}%"
             )
         }
     }
@@ -54,12 +88,14 @@ fun CoreControlPanel(
     coreNumber: Int,
     core: Core?,
     totalPowerConsumption: Double,
+
     onProcessorChange: (Core?) -> Unit,
     utilization: Double
 ) {
     Box(
         modifier
             .padding(horizontal = 8.dp)
+            .padding(bottom = 8.dp)
             .heightIn(min = 120.dp, max = 240.dp)
             .fillMaxHeight()
             .customBorder(),
@@ -132,5 +168,28 @@ fun CoreControlPanel(
                 style = MaterialTheme.typography.caption
             )
         }
+    }
+}
+
+@Composable
+fun CoreInfoBox(
+    modifier: Modifier = Modifier,
+    name: String,
+    value: String
+) {
+    Row(
+        modifier = modifier
+            .padding(horizontal = 8.dp)
+            .customBorder()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(name)
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = value,
+            textAlign = TextAlign.End,
+            style = MaterialTheme.typography.subtitle1
+        )
     }
 }
