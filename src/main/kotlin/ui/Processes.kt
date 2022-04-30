@@ -1,20 +1,26 @@
 package ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.pointer.isCtrlPressed
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -23,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import model.Process
 import processColors
 import util.toPx
-import kotlin.math.roundToInt
 
 var processColorCount = 0
 val itemHeight = 20.dp
@@ -33,37 +38,42 @@ fun ProcessesScreen(
     modifier: Modifier = Modifier,
     processes: List<Process>,
     enabled: Boolean,
-    onProcessAdd: (Process) -> Unit,
+    onProcessAdd: (String, Int, Int) -> Unit,
+    onProcessUpdate: (Process, Process) -> Unit,
+    onProcessDuplicate: (Process) -> Unit,
     onProcessDelete: (Process) -> Unit,
     scrollState: LazyListState
 ) {
-    val dummyProcessCount = rememberSaveable { mutableStateOf(0) }
     val itemHeightPx = itemHeight.toPx()
 
     Row(
         modifier = modifier
             .padding(horizontal = 8.dp)
             .customBorder()
-            .onGloballyPositioned {
-                dummyProcessCount.value = (it.size.height / itemHeightPx).roundToInt()
-            }
     ) {
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth(0.7f)
                 .fillMaxHeight()
         ) {
+            val dummyProcessCount = (this.maxHeight.toPx() / itemHeightPx).toInt()
             Column {
                 ProcessesHeader()
                 LazyColumn(
                     state = scrollState
                 ) {
                     items(processes.size) { index ->
-                        ProcessItem(processes[index], onProcessDelete)
+                        ProcessItem(
+                            process = processes[index],
+                            editable = enabled,
+                            onUpdate = onProcessUpdate,
+                            onDuplicate = onProcessDuplicate,
+                            onDelete = onProcessDelete
+                        )
                     }
 
-                    if (dummyProcessCount.value - processes.size > 0) {
-                        items(dummyProcessCount.value - processes.size) {
+                    if (dummyProcessCount - processes.size > 0) {
+                        items(dummyProcessCount - processes.size) {
                             DummyProcessItem()
                         }
                     }
@@ -110,35 +120,89 @@ fun ProcessesHeader() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ProcessItem(
     process: Process,
-    onItemClick: (Process) -> Unit
+    editable: Boolean,
+    onUpdate: (Process, Process) -> Unit,
+    onDuplicate: (Process) -> Unit,
+    onDelete: (Process) -> Unit
 ) {
+    val edit = remember { mutableStateOf(false) }
     Row(
         modifier = Modifier.fillMaxWidth()
             .height(itemHeight)
             .fillMaxSize()
-            .clickable {
-                onItemClick(process)
-            }
     ) {
-        listOf(
-            process.processName,
-            process.arrivalTime.toString(),
-            process.workload.toString()
-        ).apply {
+        val texts = remember {
+            mutableStateListOf(
+                process.processName,
+                process.arrivalTime.toString(),
+                process.workload.toString()
+            )
+        }
+        texts.apply {
             forEachIndexed { i, s ->
                 Box(
                     modifier = Modifier.weight(1f / this.size)
-                        .background(if(i == 0) Color(process.processColor) else MaterialTheme.colors.background)
+                        .background(
+                            if (i == 0) {
+                                Color(process.processColor)
+                            } else {
+                                if (edit.value) {
+                                    MaterialTheme.colors.surface
+                                } else {
+                                    MaterialTheme.colors.background
+                                }
+                            }
+                        )
                         .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 ) {
-                    Text(
-                        modifier = Modifier.fillMaxSize().padding(2.dp),
-                        text = s,
-                        textAlign = TextAlign.Center
-                    )
+                    ContextMenuDataProvider(
+                        items = {
+                            listOf(
+                                ContextMenuItem("Duplicate") {
+                                    onDuplicate(process.copy())
+                                },
+                                ContextMenuItem("Delete") {
+                                    onDelete(process)
+                                }
+                            )
+                        }
+                    ) {
+                        BasicTextField(
+                            modifier = Modifier.fillMaxSize()
+                                .onKeyEvent {
+                                    if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
+                                        if (editable && edit.value) {
+                                            texts[1] = (texts[1].toIntOrNull() ?: process.arrivalTime).toString()
+                                            texts[2] = (texts[2].toIntOrNull() ?: process.workload).toString()
+                                            onUpdate(
+                                                process,
+                                                process.copy(
+                                                    processName = texts[0],
+                                                    arrivalTime = texts[1].toInt(),
+                                                    workload = texts[2].toInt()
+                                                )
+                                            )
+
+                                            edit.value = false
+                                        }
+                                        true
+                                    } else false
+                                },
+                            value = s,
+                            onValueChange = {
+                                if (editable) {
+                                    texts[i] = it
+                                    edit.value = true
+                                }
+                            },
+                            singleLine = true,
+                            textStyle = TextStyle.Default.copy(textAlign = TextAlign.Center)
+                        )
+                    }
                 }
             }
         }
@@ -175,7 +239,7 @@ fun DummyProcessItem(
 fun ProcessAddScreen(
     processesCount: Int,
     enabled: Boolean,
-    onProcessAdd: (Process) -> Unit
+    onProcessAdd: (String, Int, Int) -> Unit
 ) {
     val processName = rememberSaveable { mutableStateOf("") }
     val arrivalTime = rememberSaveable { mutableStateOf("0") }
@@ -252,13 +316,9 @@ fun ProcessAddScreen(
             content = { Text("Add") },
             onClick = {
                 onProcessAdd(
-                    Process(
-                        pid = processesCount + 1,
-                        processName = processName.value,
-                        arrivalTime = arrivalTime.value.toIntOrNull() ?: 0,
-                        workload = workload.value.toIntOrNull() ?: 1,
-                        processColor = processColors[processColorCount++ % processColors.size]
-                    )
+                    processName.value,
+                    arrivalTime.value.toIntOrNull() ?: 0,
+                    workload.value.toIntOrNull() ?: 1
                 )
             },
             enabled =

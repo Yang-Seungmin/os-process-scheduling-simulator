@@ -27,7 +27,6 @@ fun ResultScreen(
     modifier: Modifier = Modifier,
     results: List<ExecuteResult>
 ) {
-    val dummyResultCount = rememberSaveable { mutableStateOf(0) }
     val itemHeightPx = itemHeight.toPx()
     val scrollState = rememberLazyListState()
 
@@ -39,15 +38,14 @@ fun ResultScreen(
         modifier = modifier
             .padding(horizontal = 8.dp)
             .customBorder()
-            .onGloballyPositioned {
-                dummyResultCount.value = (it.size.height / itemHeightPx).roundToInt()
-            }
     ) {
-        Box(
+        BoxWithConstraints (
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
+            val dummyResultCount = (this.maxHeight.toPx() / itemHeightPx).toInt()
+
             Column {
                 ResultHeader()
                 LazyColumn(
@@ -57,8 +55,8 @@ fun ResultScreen(
                         ResultItem(results[index])
                     }
 
-                    if (dummyResultCount.value - results.size > 0) {
-                        items(dummyResultCount.value - results.size) {
+                    if (dummyResultCount - results.size > 0) {
+                        items(dummyResultCount - results.size) {
                             DummyResultItem()
                         }
                     }

@@ -1,6 +1,5 @@
 package ui
 
-import schedulingalgorithm.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
@@ -15,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
@@ -22,14 +22,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromStream
-import kotlinx.serialization.json.encodeToStream
 import manager.CoreManager
-import model.Process
+import manager.ProcessManager
+import schedulingalgorithm.*
 import ui.state.UiState
 import util.toPx
-import java.io.File
 import kotlin.math.roundToInt
 
 
@@ -37,9 +34,9 @@ import kotlin.math.roundToInt
 @Preview
 fun MainScreen(
     schedulingAlgorithmRunner: SchedulingAlgorithmRunner,
-    coreManager: CoreManager
+    coreManager: CoreManager,
+    processManager: ProcessManager
 ) {
-    val cores = remember { coreManager.cores.toMutableStateList() }
     //For algorithm
     val coroutineScope = rememberCoroutineScope()
     var isRunning by remember { mutableStateOf(false) }
@@ -58,14 +55,10 @@ fun MainScreen(
     var offset by remember { mutableStateOf(0) }
     offset = (autoScrollThreshold / (maxAccumulation / accumulationLevel).toPx()).roundToInt()
 
-    //For file
-    var isFileOpenerOpened by remember { mutableStateOf(false) }
-    var isFileSaverOpened by remember { mutableStateOf(false) }
-
     //For process
     val processScrollState = rememberLazyListState()
-    val processes = rememberSaveable { mutableStateListOf<Process>() }
 
+    //UI State
     var uiState by remember { mutableStateOf(UiState.default()) }
 
     val runButtonClicked: () -> Unit = {
@@ -79,7 +72,7 @@ fun MainScreen(
                 if (schedulingAlgorithm is RR) (schedulingAlgorithm as RR).rrQuantum = rrQuantum
 
                 setCores(coreManager.cores.filterNotNull())
-                setProcesses(processes)
+                setProcesses(processManager.processes)
 
                 coroutineScope.run(
                     onTimeElapsed = {
@@ -87,7 +80,7 @@ fun MainScreen(
                         uiState = refreshUiState(uiState)
 
                         coroutineScope.launch {
-                            scrollState.animateScrollToItem(with(time - offset) { if (this > 0) this else 0 })
+                            scrollState.scrollToItem(with(time - offset) { if (this > 0) this else 0 })
                         }
                     },
                     onEnd = {
@@ -105,27 +98,6 @@ fun MainScreen(
         colors = Colors,
         typography = Typography
     ) {
-        if (isFileOpenerOpened) {
-            ProcessesJsonFileLoadDialog { dir, file ->
-                isFileOpenerOpened = false
-
-                if (file != null) {
-                    processes.clear()
-                    processes.addAll(Json.decodeFromStream<List<Process>>(File(dir, file).inputStream()))
-                    processColorCount = processes.size
-                }
-            }
-        }
-        if (isFileSaverOpened) {
-            ProcessesJsonFileSaveDialog { dir, file ->
-                isFileSaverOpened = false
-
-                if (file != null) {
-                    Json.encodeToStream(processes.toList(), File(dir, file).outputStream())
-                }
-            }
-        }
-
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colors.onBackground) {
             Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background).padding(8.dp)) {
                 Column {
@@ -251,7 +223,7 @@ fun MainScreen(
                                     Row {
                                         Text(
                                             modifier = Modifier.padding(8.dp),
-                                            text = "Processes (${processes.size})",
+                                            text = "Processes (${processManager.processesStateList.size})",
                                             style = MaterialTheme.typography.subtitle1
                                         )
 
@@ -260,7 +232,19 @@ fun MainScreen(
                                         Text(
                                             modifier = Modifier
                                                 .clickable {
-                                                    isFileOpenerOpened = true
+                                                    processManager.clearProcess()
+                                                }
+                                                .padding(8.dp),
+                                            text = "Clear processes",
+                                            color = MaterialTheme.colors.primary
+                                        )
+
+                                        Text(
+                                            modifier = Modifier
+                                                .clickable {
+                                                    importFromJsonFileDialog(ComposeWindow())?.let {file ->
+                                                        processManager.importProcessesFromFile(file)
+                                                    }
                                                 }
                                                 .padding(8.dp),
                                             text = "Import from..",
@@ -270,7 +254,9 @@ fun MainScreen(
                                         Text(
                                             modifier = Modifier
                                                 .clickable {
-                                                    isFileSaverOpened = true
+                                                    exportFromJsonFileDialog(ComposeWindow())?.let { file ->
+                                                        processManager.exportProcessesToFile(file)
+                                                    }
                                                 }
                                                 .padding(8.dp),
                                             text = "Export to..",
@@ -280,14 +266,21 @@ fun MainScreen(
 
                                     ProcessesScreen(
                                         modifier = Modifier.fillMaxHeight(),
-                                        processes = processes,
-                                        onProcessAdd = {
-                                            processes.add(it)
+                                        processes = processManager.processesStateList,
+                                        onProcessAdd = { name, arrivalTime, workload ->
+                                            processManager.addProcess(name, arrivalTime, workload)
                                             coroutineScope.launch {
-                                                processScrollState.animateScrollToItem(processes.size)
+                                                processScrollState.animateScrollToItem(processManager.size)
                                             }
-                                        }, onProcessDelete = {
-                                            processes.remove(it)
+                                        },
+                                        onProcessUpdate = { before, after ->
+                                            processManager.modifyProcess(before, after)
+                                        },
+                                        onProcessDuplicate = { process ->
+                                            processManager.duplicateProcess(process)
+                                        },
+                                        onProcessDelete = {
+                                            processManager.removeProcess(it)
                                         },
                                         enabled = !isRunning,
                                         scrollState = processScrollState
@@ -308,8 +301,8 @@ fun MainScreen(
 
                                     Text(
                                         modifier = Modifier.clickable {
-                                            if(!isRunning)
-                                            coreManager.addCore()
+                                            if (!isRunning)
+                                                coreManager.addCore()
                                         }.padding(8.dp),
                                         text = "+",
                                         style = MaterialTheme.typography.subtitle1,
@@ -318,8 +311,8 @@ fun MainScreen(
 
                                     Text(
                                         modifier = Modifier.clickable {
-                                            if(!isRunning)
-                                            coreManager.removeCore()
+                                            if (!isRunning)
+                                                coreManager.removeCore()
                                         }.padding(8.dp),
                                         text = "-",
                                         style = MaterialTheme.typography.subtitle1,
@@ -338,7 +331,9 @@ fun MainScreen(
                                             )
                                     },
                                     totalPowerConsumptions = uiState.totalPowerConsumptions,
-                                    utilization = uiState.utilizationTimeLine.mapValues { it.value.lastOrNull() ?: 0.0 },
+                                    utilization = uiState.utilizationTimeLine.mapValues {
+                                        it.value.lastOrNull() ?: 0.0
+                                    },
                                     enabled = !isRunning,
                                     coreList = coreManager.coreState
                                 )
@@ -411,7 +406,7 @@ fun MainScreen(
                                         autoScrollThreshold = (it.size.width * 0.65).toInt()
                                     },
                                     accumulation = maxAccumulation / accumulationLevelAnimate,
-                                    processes = processes,
+                                    processes = processManager.processesStateList,
                                     ganttChartItems = uiState.ganttChartMap,
                                     state = scrollState
                                 )

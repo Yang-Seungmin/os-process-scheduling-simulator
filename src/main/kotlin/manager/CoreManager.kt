@@ -38,4 +38,8 @@ class CoreManager {
         _cores[index] = null
         return cores[index]
     }
+
+    companion object{
+        val coreTypes = listOf("OFF", "P-Core", "E-Core")
+    }
 }

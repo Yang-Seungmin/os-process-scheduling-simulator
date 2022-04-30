@@ -9,6 +9,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import kotlinx.coroutines.launch
 import manager.CoreManager
+import manager.ProcessManager
 import org.koin.core.context.startKoin
 import org.koin.java.KoinJavaComponent.inject
 import schedulingalgorithm.RR
@@ -19,6 +20,7 @@ fun main() = application {
 
     val schedulingAlgorithmRunner = SchedulingAlgorithmRunner()
     val coreManager = CoreManager()
+    val processManager = ProcessManager()
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -31,7 +33,8 @@ fun main() = application {
     ) {
         MainScreen(
             schedulingAlgorithmRunner = schedulingAlgorithmRunner,
-            coreManager = coreManager
+            coreManager = coreManager,
+            processManager = processManager
         )
     }
 }

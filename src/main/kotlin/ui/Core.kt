@@ -125,7 +125,7 @@ fun CoreControlPanel(
                 fontWeight = FontWeight.Bold
             )
 
-            listOf("OFF", "P-Core", "E-Core").forEach {
+            CoreManager.coreTypes.forEach {
                 val opc = {
                     if (enabled) onProcessorChange(
                         when (it) {
@@ -164,7 +164,7 @@ fun CoreControlPanel(
             Text(
                 modifier = Modifier
                     .padding(horizontal = 8.dp, vertical = 4.dp),
-                text = "${(totalPowerConsumption * 10).roundToInt() / 10.0}W\n${(utilization * 10000).roundToInt() / 100.0}%",
+                text = "${String.format("%.1f", totalPowerConsumption)}W\n${String.format("%.2f", utilization * 100)}%",
                 style = MaterialTheme.typography.caption
             )
         }
