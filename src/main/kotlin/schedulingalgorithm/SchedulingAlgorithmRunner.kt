@@ -14,7 +14,7 @@ import ui.state.UiState
 
 class SchedulingAlgorithmRunner {
     val schedulingAlgorithms = listOf(
-        FCFS(), RR(), SPN(), SRTN(), HRRN()
+        FCFS(), RR(), SPN(), SRTN(), HRRN(), CustomAlgorithm()
     )
 
     var schedulingAlgorithm: SchedulingAlgorithm = schedulingAlgorithms[0]
