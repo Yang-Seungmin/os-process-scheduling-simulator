@@ -7,7 +7,7 @@ import processColors
 import kotlin.random.Random
 import kotlin.random.nextInt
 
-fun generateRandomProcesses(size: Int, btRange: IntRange, arrivalTimeRange: IntRange): List<Process> {
+fun generateRandomProcesses(size: Int, btRange: IntRange, atRange: IntRange): List<Process> {
     val list = mutableListOf<Process>()
 
     var arrivalTime = 0
@@ -23,7 +23,7 @@ fun generateRandomProcesses(size: Int, btRange: IntRange, arrivalTimeRange: IntR
             )
         )
 
-        arrivalTime += Random.nextInt(arrivalTimeRange)
+        arrivalTime += Random.nextInt(atRange)
     }
 
     return list

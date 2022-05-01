@@ -8,11 +8,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,14 +23,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import model.Process
 import processColors
 import util.toPx
 
 var processColorCount = 0
 val itemHeight = 20.dp
+val columnSize = 3
+val columnItems = listOf(
+    "Process Name",
+    "Arrival Time (AT)",
+    "Workload"
+)
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProcessesScreen(
     modifier: Modifier = Modifier,
@@ -44,7 +51,7 @@ fun ProcessesScreen(
     onProcessDelete: (Process) -> Unit,
     scrollState: LazyListState
 ) {
-    val itemHeightPx = itemHeight.toPx()
+    var editModeIndex by remember { mutableStateOf(-1) }
 
     Row(
         modifier = modifier
@@ -56,29 +63,42 @@ fun ProcessesScreen(
                 .fillMaxWidth(0.7f)
                 .fillMaxHeight()
         ) {
-            val dummyProcessCount = (this.maxHeight.toPx() / itemHeightPx).toInt()
-            Column {
-                ProcessesHeader()
-                LazyColumn(
-                    state = scrollState
-                ) {
-                    items(processes.size) { index ->
-                        ProcessItem(
-                            process = processes[index],
-                            editable = enabled,
-                            onUpdate = onProcessUpdate,
-                            onDuplicate = onProcessDuplicate,
-                            onDelete = onProcessDelete
-                        )
-                    }
+            val dummyProcessCount = (maxHeight / itemHeight).toInt()
 
-                    if (dummyProcessCount - processes.size > 0) {
-                        items(dummyProcessCount - processes.size) {
-                            DummyProcessItem()
+            LazyColumn(
+                state = scrollState
+            ) {
+                stickyHeader {
+                    ProcessesHeader(maxWidth)
+                }
+                items(processes.size) { index ->
+                    ProcessItem(
+                        width = maxWidth,
+                        index = index,
+                        process = processes[index],
+                        editable = enabled,
+                        onUpdate = onProcessUpdate,
+                        onDuplicate = onProcessDuplicate,
+                        onDelete = onProcessDelete,
+                        isEditMode = index == editModeIndex,
+                        onEditModeChange = {
+                            editModeIndex = it
                         }
+                    )
+                }
+
+                if (dummyProcessCount - processes.size > 0) {
+                    items(dummyProcessCount - processes.size) {
+                        DummyProcessItem(maxWidth)
                     }
                 }
             }
+
+            VerticalScrollbar(
+                modifier = Modifier.align(Alignment.CenterEnd)
+                    .fillMaxHeight(),
+                adapter = rememberScrollbarAdapter(scrollState)
+            )
         }
 
         Box(
@@ -93,47 +113,47 @@ fun ProcessesScreen(
 }
 
 @Composable
-fun ProcessesHeader() {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        listOf(
-            "Process Name",
-            "Arrival Time (AT)",
-            "Workload"
-        ).apply {
-            forEach {
-                Box(
-                    modifier = Modifier.weight(1f / this.size)
-                        .height(itemHeight)
-                        .background(MaterialTheme.colors.primary)
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxSize().padding(2.dp),
-                        text = it,
-                        color = MaterialTheme.colors.onPrimary,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
+fun ProcessesHeader(
+    width: Dp
+) {
+    Row(modifier = Modifier.width(width)) {
+        columnItems.forEach {
+            Box(
+                modifier = Modifier.width(width / columnSize)
+                    .height(itemHeight)
+                    .background(MaterialTheme.colors.primary)
+                    .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+            ) {
+                Text(
+                    modifier = Modifier.width(width).height(itemHeight).padding(2.dp),
+                    text = it,
+                    color = MaterialTheme.colors.onPrimary,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
             }
         }
+
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ProcessItem(
+    width: Dp,
+    index: Int,
     process: Process,
     editable: Boolean,
+    isEditMode: Boolean,
+    onEditModeChange: (Int) -> Unit,
     onUpdate: (Process, Process) -> Unit,
     onDuplicate: (Process) -> Unit,
     onDelete: (Process) -> Unit
 ) {
     val edit = remember { mutableStateOf(false) }
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.width(width)
             .height(itemHeight)
-            .fillMaxSize()
     ) {
         val texts = remember {
             mutableStateListOf(
@@ -142,37 +162,37 @@ fun ProcessItem(
                 process.workload.toString()
             )
         }
-        texts.apply {
-            forEachIndexed { i, s ->
-                Box(
-                    modifier = Modifier.weight(1f / this.size)
-                        .background(
-                            if (i == 0) {
-                                Color(process.processColor)
+        texts.forEachIndexed { i, s ->
+            Box(
+                modifier = Modifier.width(width / columnSize).height(itemHeight)
+                    .background(
+                        if (i == 0) {
+                            Color(process.processColor)
+                        } else {
+                            if (edit.value) {
+                                MaterialTheme.colors.surface
                             } else {
-                                if (edit.value) {
-                                    MaterialTheme.colors.surface
-                                } else {
-                                    MaterialTheme.colors.background
-                                }
+                                MaterialTheme.colors.background
+                            }
+                        }
+                    )
+                    .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+            ) {
+                ContextMenuDataProvider(
+                    items = {
+                        listOf(
+                            ContextMenuItem("Duplicate") {
+                                onDuplicate(process.copy())
+                            },
+                            ContextMenuItem("Delete") {
+                                onDelete(process)
                             }
                         )
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+                    }
                 ) {
-                    ContextMenuDataProvider(
-                        items = {
-                            listOf(
-                                ContextMenuItem("Duplicate") {
-                                    onDuplicate(process.copy())
-                                },
-                                ContextMenuItem("Delete") {
-                                    onDelete(process)
-                                }
-                            )
-                        }
-                    ) {
+                    if (isEditMode) {
                         BasicTextField(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.width(width / columnSize).height(itemHeight)
                                 .onKeyEvent {
                                     if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
                                         if (editable && edit.value) {
@@ -202,35 +222,37 @@ fun ProcessItem(
                             singleLine = true,
                             textStyle = TextStyle.Default.copy(textAlign = TextAlign.Center)
                         )
+                    } else {
+                        Text(
+                            modifier = Modifier.width(width / columnSize).height(itemHeight)
+                                .mouseClickable {
+                                    onEditModeChange(index)
+                                },
+                            text = s,
+                            textAlign = TextAlign.Center
+                        )
                     }
+
                 }
             }
         }
+
     }
 }
 
 @Composable
 fun DummyProcessItem(
+    width: Dp
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .fillMaxSize()
+        modifier = Modifier.width(width).height(itemHeight)
     ) {
-        listOf("", "", "").apply {
-            forEach {
-                Box(
-                    modifier = Modifier.weight(1f / this.size)
-                        .background(MaterialTheme.colors.background)
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxSize().padding(2.dp),
-                        text = it,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+        columnItems.forEach {
+            Box(
+                modifier = Modifier.width(width / columnSize).height(itemHeight)
+                    .background(MaterialTheme.colors.background)
+                    .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+            )
         }
     }
 }

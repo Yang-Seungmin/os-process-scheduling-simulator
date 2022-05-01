@@ -39,9 +39,7 @@ class ProcessManager {
     fun addProcesses(
         processes: Collection<Process>
     ) {
-        _processes.addAll(
-            processes
-        )
+        _processes.addAll(processes)
     }
 
     fun removeProcess(process: Process) {

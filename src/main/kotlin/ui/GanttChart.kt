@@ -232,7 +232,3 @@ fun BoxScope.GanttChartScale(
         }
     }
 }
-
-fun Number.toDegree(): Double {
-    return Math.toDegrees(this.toDouble())
-}

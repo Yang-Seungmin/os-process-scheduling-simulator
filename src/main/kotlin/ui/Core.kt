@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import manager.CoreManager
 import model.Core
 import util.toPx
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -36,22 +37,26 @@ fun CoresScreen(
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
-        Column(
+        BoxWithConstraints(
             modifier = Modifier.fillMaxWidth().weight(1f)
         ) {
             val columnSize = if((sqrt(coreList.size.toDouble() * 2)).roundToInt() > 4) (sqrt(coreList.size.toDouble() * 2)).roundToInt() else 4
+            val rowSize = ceil(coreList.size / columnSize.toDouble()).toInt()
 
-            coreList.chunked(columnSize).forEachIndexed { index1, cores ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().weight(1f)
-                ) {
-                    cores.forEachIndexed { index2, core ->
+            val width = maxWidth / columnSize
+            val height = maxHeight / rowSize
+
+            (0 until rowSize).forEach { rowIndex ->
+                (0 until columnSize).forEach { columnIndex ->
+                    val coreIndex = rowIndex * columnSize + columnIndex
+                    if(coreIndex < coreList.size) {
+                        val core = coreList[coreIndex]
                         CoreControlPanel(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.offset(x = width * (columnIndex ), y = height * (rowIndex )).size(width, height),
                             core = core,
-                            coreNumber = (index1 * columnSize) + index2,
+                            coreNumber = coreIndex,
                             onProcessorChange = {
-                                onCoreChange((index1 * columnSize) + index2, it)
+                                onCoreChange(coreIndex, it)
                             },
                             totalPowerConsumption = totalPowerConsumptions[core] ?: 0.0,
                             utilization = utilization[core] ?: 0.0,
@@ -104,7 +109,6 @@ fun CoreControlPanel(
         core?.process?.let {
             Box(
                 modifier = Modifier.height(20.dp)
-                    .defaultMinSize(minWidth = 20.dp)
                     .border(width = 0.5.dp, color = MaterialTheme.colors.onBackground)
                     .background(Color(it.processColor))
                     .padding(horizontal = 4.dp),

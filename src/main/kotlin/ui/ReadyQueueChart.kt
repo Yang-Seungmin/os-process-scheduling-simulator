@@ -78,20 +78,6 @@ fun ReadyQueueList(
                 }
             }
         }
-
-        Box {
-            Text(
-                modifier = Modifier,
-                text = "First",
-                style = MaterialTheme.typography.caption
-            )
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Last",
-                style = MaterialTheme.typography.caption,
-                textAlign = TextAlign.End
-            )
-        }
     }
 }
 
