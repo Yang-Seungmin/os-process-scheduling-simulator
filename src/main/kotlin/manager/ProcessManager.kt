@@ -1,22 +1,20 @@
 package manager
 
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import model.Process
-import ui.processColorCount
+import ui.state.ProcessState
 import util.hslToRGB
 import java.io.File
 import kotlin.random.Random
 
-class ProcessManager {
-    private val _processes = mutableListOf<Process>().toMutableStateList()
-    val processes: List<Process> get() = _processes
-    val processesStateList: SnapshotStateList<Process> get() = _processes
+class ProcessManager(
+    val processState: ProcessState
+) {
+    private val processes = processState.processes
 
-    val size get() = _processes.size
+    val size get() = processes.size
 
     var pid = 0
 
@@ -25,7 +23,7 @@ class ProcessManager {
         processArrivalTime: Int,
         processWorkload: Int
     ) {
-        _processes.add(
+        processes.add(
             Process(
                 pid = ++pid,
                 processName = processName,
@@ -39,45 +37,45 @@ class ProcessManager {
     fun addProcesses(
         processes: Collection<Process>
     ) {
-        _processes.addAll(processes)
+        this.processes.addAll(processes)
     }
 
     fun removeProcess(process: Process) {
-        _processes.remove(process)
+        processes.remove(process)
     }
 
     fun duplicateProcess(process: Process) {
-        val index = _processes.indexOf(process)
+        val index = processes.indexOf(process)
 
         if (index >= 0) {
-            _processes.add(
+            processes.add(
                 index,
                 process.copy(
                     pid = ++pid,
                     processColor = generateRandomProcessColor()
                 )
             )
-        } else _processes.add(process)
+        } else processes.add(process)
     }
 
     fun modifyProcess(
         beforeProcess: Process,
         afterProcess: Process
     ) {
-        val index = _processes.indexOf(beforeProcess)
+        val index = processes.indexOf(beforeProcess)
 
         if (index >= 0) {
-            _processes[index] = afterProcess
-        } else _processes.add(afterProcess)
+            processes[index] = afterProcess
+        } else processes.add(afterProcess)
     }
 
     fun clearProcess() {
-        _processes.clear()
+        processes.clear()
     }
 
     fun importProcessesFromFile(file: File) {
-        _processes.clear()
-        _processes.addAll(Json.decodeFromStream<List<Process>>(file.inputStream()))
+        processes.clear()
+        processes.addAll(Json.decodeFromStream<List<Process>>(file.inputStream()))
     }
 
     fun exportProcessesToFile(file: File) {
@@ -95,11 +93,10 @@ class ProcessManager {
 
             val randomColorArray = hslToRGB(
                 random,
-                Random.nextFloat() * 0.3f + 0.5f,
-                0.85f,
+                Random.nextFloat() * 0.9f,
+                0.6f,
                 1f
             )
-
 
             return 0xff000000 or
                     ((randomColorArray[0] shl 16).toLong()) or

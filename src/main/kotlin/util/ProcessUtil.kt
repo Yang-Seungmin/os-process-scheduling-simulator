@@ -1,9 +1,11 @@
 package util
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToStream
+import manager.ProcessManager
 import model.Process
 import processColors
+import java.io.File
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -17,7 +19,7 @@ fun generateRandomProcesses(size: Int, btRange: IntRange, atRange: IntRange): Li
             Process(
                 pid = it,
                 processName = "P$it",
-                processColor = processColors[it % processColors.size],
+                processColor = ProcessManager.generateRandomProcessColor(),
                 arrivalTime = arrivalTime,
                 workload = Random.nextInt(btRange)
             )
@@ -30,6 +32,6 @@ fun generateRandomProcesses(size: Int, btRange: IntRange, atRange: IntRange): Li
 }
 
 fun main() {
-    val processes = generateRandomProcesses(100, 1..100, 0..10)
-    println(Json.encodeToString(processes))
+    val processes = generateRandomProcesses(300, 20..40, 0..1)
+    println(Json.encodeToStream(processes, File("processes.json").outputStream()))
 }

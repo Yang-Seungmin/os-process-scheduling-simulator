@@ -1,45 +1,51 @@
 package manager
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
 import model.Core
+import ui.state.CoreState
+import ui.state.GanttChartState
 
-class CoreManager {
-    private val _cores = mutableListOf<Core?>(
-        Core.PCore("Core 0 [P-Core]"),
-        Core.PCore("Core 1 [P-Core]"),
-        Core.ECore("Core 2 [E-Core]"),
-        Core.ECore("Core 3 [E-Core]")
-    ).toMutableStateList()
-    val cores : List<Core?> get() = _cores
-    val coreState : SnapshotStateList<Core?> get() = _cores
-
+class CoreManager(
+    val coreState: CoreState,
+    val ganttChartState: GanttChartState
+) {
     fun addCore() {
-        _cores.add(Core.PCore("Core ${_cores.size} [P-Core]"))
+        coreState.cores.add(Core.PCore("Core ${coreState.cores.size} [P-Core]", coreState.cores.size))
+        refreshGanttChart()
     }
 
     fun removeCore() {
-        _cores.removeLast()
+        coreState.cores.removeLast()
+        refreshGanttChart()
     }
 
-    fun setPCore(index: Int) : Core? {
-        _cores[index] = Core.PCore("Core $index [P-Core]")
-        return cores[index]
+    fun setPCore(index: Int): Core? {
+        coreState.cores[index] = Core.PCore("Core $index [P-Core]", index)
+        refreshGanttChart()
+        return coreState.cores[index]
     }
 
-    fun setECore(index: Int) : Core? {
-        _cores[index] = Core.ECore("Core $index [E-Core]")
-        return cores[index]
+    fun setECore(index: Int): Core? {
+        coreState.cores[index] = Core.ECore("Core $index [E-Core]", index)
+        refreshGanttChart()
+        return coreState.cores[index]
     }
 
-    fun setCoreOff(index: Int) : Core? {
-        _cores[index] = null
-        return cores[index]
+    fun setCoreOff(index: Int): Core? {
+        coreState.cores[index] = null
+        refreshGanttChart()
+        return coreState.cores[index]
     }
 
-    companion object{
+    fun refreshGanttChart() {
+        with(ganttChartState.ganttChartMapState) {
+            clear()
+            coreState.cores.filterNotNull().forEach {
+                put(it, mutableListOf())
+            }
+        }
+    }
+
+    companion object {
         val coreTypes = listOf("OFF", "P-Core", "E-Core")
     }
 }

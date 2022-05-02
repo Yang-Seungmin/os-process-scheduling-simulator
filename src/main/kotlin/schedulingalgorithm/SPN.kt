@@ -6,7 +6,7 @@ class SPN : SchedulingAlgorithm(
     algorithmName = "SPN",
     readyQueueSize = 1
 ) {
-    private fun pollShortestProcess() : Process? {
+    private fun pollShortestProcess(): Process? {
         val process = singleReadyQueue.minByOrNull { it.workload }
         singleReadyQueue.remove(process)
         return process

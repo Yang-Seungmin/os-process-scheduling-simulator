@@ -32,14 +32,14 @@ class CustomAlgorithm : SchedulingAlgorithm(
     }
 
     override fun beforeWork(time: Int) {
-        cores.filterIsInstance<Core.PCore>().forEach {core ->
+        cores.filterIsInstance<Core.PCore>().forEach { core ->
             if (mainReadyQueue.isNotEmpty()) {
                 if (core.process == null) {
                     core.process = pollLongestRemainingProcess(queue = mainReadyQueue)
                 }
             }
         }
-        cores.filterIsInstance<Core.ECore>().forEach {core ->
+        cores.filterIsInstance<Core.ECore>().forEach { core ->
             if (onlyOneRemainingTimeProcessReadyQueue.isNotEmpty()) {
                 if (core.process == null) {
                     core.process = pollShortestRemainingProcess(queue = onlyOneRemainingTimeProcessReadyQueue)

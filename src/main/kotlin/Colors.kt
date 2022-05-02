@@ -1,5 +1,3 @@
-import androidx.compose.ui.graphics.Color
-
 val processColors = listOf(
     0xffD98880,
     0xffC39BD3,

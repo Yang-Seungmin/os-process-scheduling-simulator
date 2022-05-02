@@ -3,29 +3,21 @@ package ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import model.ExecuteResult
 import model.normalizedTurnAroundTime
 import model.waitingTime
-import util.toPx
-import kotlin.math.roundToInt
+import ui.state.ResultState
 
 val headerItems = listOf(
     "Process",//"Process Name",
@@ -41,41 +33,67 @@ val headerItemCount = headerItems.size
 @Composable
 fun ResultScreen(
     modifier: Modifier = Modifier,
-    results: List<ExecuteResult>,
-    scrollState: LazyListState
+    resultState: ResultState,
 ) {
-    BoxWithConstraints(
-        modifier = modifier
-            .padding(horizontal = 8.dp)
-            .customBorder()
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        val dummyResultCount = (maxHeight / itemHeight).toInt()
+    LaunchedEffect(resultState.resultTable.size) {
+        resultState.scrollToLast()
+    }
 
-        LazyColumn(
-            state = scrollState
+    Column {
+        Row(
+            verticalAlignment = Alignment.Bottom
         ) {
-            stickyHeader {
-                ResultHeader(maxWidth)
-            }
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "Result (${resultState.resultTable.size})",
+                style = MaterialTheme.typography.subtitle1
+            )
 
-            items(results.size) { index ->
-                ResultItem(maxWidth, results[index])
-            }
-
-            if (dummyResultCount - results.size > 0) {
-                items(dummyResultCount - results.size) {
-                    DummyResultItem(maxWidth)
-                }
-            }
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "Average NTT : ${
+                    String.format(
+                        "%.3f",
+                        resultState.resultTable.map { it.normalizedTurnAroundTime }.average()
+                    )
+                }",
+                style = MaterialTheme.typography.body1
+            )
         }
 
-        VerticalScrollbar(
-            modifier = Modifier.align(Alignment.CenterEnd)
-                .fillMaxHeight(),
-            adapter = rememberScrollbarAdapter(scrollState)
-        )
+        BoxWithConstraints(
+            modifier = modifier
+                .padding(horizontal = 8.dp)
+                .customBorder()
+                .fillMaxWidth()
+                .fillMaxHeight()
+        ) {
+            val dummyResultCount = (maxHeight / itemHeight).toInt()
+
+            LazyColumn(
+                state = resultState.scrollState
+            ) {
+                stickyHeader {
+                    ResultHeader(maxWidth)
+                }
+
+                items(resultState.resultTable.size) { index ->
+                    ResultItem(maxWidth, resultState.resultTable[index])
+                }
+
+                if (dummyResultCount - resultState.resultTable.size > 0) {
+                    items(dummyResultCount - resultState.resultTable.size) {
+                        DummyResultItem(maxWidth)
+                    }
+                }
+            }
+
+            VerticalScrollbar(
+                modifier = Modifier.align(Alignment.CenterEnd)
+                    .fillMaxHeight(),
+                adapter = rememberScrollbarAdapter(resultState.scrollState)
+            )
+        }
     }
 
 }

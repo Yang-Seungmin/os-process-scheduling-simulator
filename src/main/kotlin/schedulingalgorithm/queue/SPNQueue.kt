@@ -2,7 +2,6 @@ package schedulingalgorithm.queue
 
 import model.Process
 import java.util.*
-import kotlin.NoSuchElementException
 
 class SPNQueue(override val size: Int = 0) : Queue<Process> by LinkedList() {
 
@@ -14,7 +13,7 @@ class SPNQueue(override val size: Int = 0) : Queue<Process> by LinkedList() {
     }
 
     override fun element(): Process {
-        if(isEmpty()) throw NoSuchElementException()
+        if (isEmpty()) throw NoSuchElementException()
         return getShortestProcess() ?: throw NoSuchElementException()
     }
 

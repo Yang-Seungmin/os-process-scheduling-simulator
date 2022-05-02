@@ -1,6 +1,5 @@
 package ui
 
-import schedulingalgorithm.SchedulingAlgorithm
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -12,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import jdk.jfr.Enabled
+import schedulingalgorithm.SchedulingAlgorithm
 import ui.state.AlgorithmRunningState
 
 @Composable
@@ -30,7 +29,7 @@ fun AlgorithmList(
     ) {
         Text(
             modifier = Modifier.fillMaxWidth().clickable {
-                expanded.value = true
+                if (enabled) expanded.value = true
             }.padding(8.dp),
             text = "${selectedAlgorithm.algorithmName}  ▾",
             textAlign = TextAlign.End
@@ -76,7 +75,7 @@ fun RowScope.RRQuantumSlider(
 }
 
 @Composable
-fun RowScope.AlgorithmRunController(
+fun RowScope.AlgorithmControllerButtons(
     algorithmRunningState: AlgorithmRunningState,
     onStateChanged: (AlgorithmRunningState) -> Unit
 ) {
@@ -84,7 +83,7 @@ fun RowScope.AlgorithmRunController(
         modifier = Modifier.padding(start = 12.dp).padding(vertical = 2.dp).width(120.dp)
             .fillMaxHeight()
     ) {
-        if (algorithmRunningState == AlgorithmRunningState.Stopped) {
+        if (algorithmRunningState == AlgorithmRunningState.Stopped || algorithmRunningState == AlgorithmRunningState.Ended) {
             Button(
                 modifier = Modifier.fillMaxSize(),
                 onClick = {

@@ -1,7 +1,6 @@
 package model
 
 import kotlinx.serialization.Transient
-import model.Process
 
 @kotlinx.serialization.Serializable
 data class Process(

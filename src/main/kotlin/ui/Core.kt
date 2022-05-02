@@ -2,22 +2,21 @@ package ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import manager.CoreManager
 import model.Core
-import util.toPx
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -27,39 +26,84 @@ import kotlin.math.sqrt
 fun CoresScreen(
     modifier: Modifier = Modifier,
     coreManager: CoreManager,
-    coreList: List<Core?>,
     enabled: Boolean,
-    totalPowerConsumptions: Map<Core, Double>,
-    utilization: Map<Core, Double>,
     onCoreChange: (Int, Core?) -> Unit
 ) {
-    val sum = totalPowerConsumptions.values.sum()
+    var columnSize by remember { mutableStateOf(4) }
+    var rowSize by remember { mutableStateOf(1) }
+    var width by remember { mutableStateOf(0.dp) }
+    var height by remember { mutableStateOf(0.dp) }
+
+    val coreList = coreManager.coreState.cores
+    val totalPowerConsumptionPerCore = coreManager.coreState.totalPowerConsumptionPerCore
+    val utilizationPerCore = coreManager.coreState.utilizationPerCore
+
+    val sum = coreManager.coreState.totalPowerConsumptionPerCore.values.sum()
+
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
+        Row {
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "Processor (${coreManager.coreState.cores.size})",
+                style = MaterialTheme.typography.subtitle1
+            )
+
+            Text(
+                modifier = Modifier.clickable(enabled) {
+                    coreManager.addCore()
+                }.padding(8.dp),
+                text = "+",
+                style = MaterialTheme.typography.subtitle1,
+                color = if (enabled) MaterialTheme.colors.primary else MaterialTheme.colors.surface
+            )
+
+            Text(
+                modifier = Modifier.clickable(enabled) {
+                    coreManager.removeCore()
+                }.padding(8.dp),
+                text = "-",
+                style = MaterialTheme.typography.subtitle1,
+                color = if (enabled) MaterialTheme.colors.primary else MaterialTheme.colors.surface
+            )
+        }
+
         BoxWithConstraints(
             modifier = Modifier.fillMaxWidth().weight(1f)
         ) {
-            val columnSize = if((sqrt(coreList.size.toDouble() * 2)).roundToInt() > 4) (sqrt(coreList.size.toDouble() * 2)).roundToInt() else 4
-            val rowSize = ceil(coreList.size / columnSize.toDouble()).toInt()
+            LaunchedEffect(coreList.size) {
+                columnSize =
+                    if ((sqrt(coreList.size.toDouble() * 2)).roundToInt() > 4) (sqrt(coreList.size.toDouble() * 2)).roundToInt() else 4
+                rowSize = ceil(coreList.size / columnSize.toDouble()).toInt()
 
-            val width = maxWidth / columnSize
-            val height = maxHeight / rowSize
+                width = maxWidth / columnSize
+                height = maxHeight / rowSize
+            }
+
+            LaunchedEffect(maxWidth) {
+                width = maxWidth / columnSize
+            }
+
+            LaunchedEffect(maxHeight) {
+                height = maxHeight / rowSize
+            }
 
             (0 until rowSize).forEach { rowIndex ->
                 (0 until columnSize).forEach { columnIndex ->
                     val coreIndex = rowIndex * columnSize + columnIndex
-                    if(coreIndex < coreList.size) {
+                    if (coreIndex < coreList.size) {
                         val core = coreList[coreIndex]
                         CoreControlPanel(
-                            modifier = Modifier.offset(x = width * (columnIndex ), y = height * (rowIndex )).size(width, height),
+                            modifier = Modifier.offset(x = width * columnIndex, y = height * rowIndex)
+                                .size(width, height),
                             core = core,
                             coreNumber = coreIndex,
                             onProcessorChange = {
                                 onCoreChange(coreIndex, it)
                             },
-                            totalPowerConsumption = totalPowerConsumptions[core] ?: 0.0,
-                            utilization = utilization[core] ?: 0.0,
+                            totalPowerConsumption = totalPowerConsumptionPerCore[core] ?: 0.0,
+                            utilization = utilizationPerCore[core] ?: 0.0,
                             enabled = enabled,
                             coreManager = coreManager
                         )
@@ -79,7 +123,7 @@ fun CoresScreen(
             CoreInfoBox(
                 modifier = Modifier.weight(1f),
                 name = "Avg. utilization",
-                value = "${String.format("%.2f", utilization.values.average() * 100)}%"
+                value = "${String.format("%.2f", utilizationPerCore.values.average() * 100)}%"
             )
         }
     }
@@ -93,7 +137,6 @@ fun CoreControlPanel(
     coreNumber: Int,
     core: Core?,
     totalPowerConsumption: Double,
-
     onProcessorChange: (Core?) -> Unit,
     utilization: Double
 ) {

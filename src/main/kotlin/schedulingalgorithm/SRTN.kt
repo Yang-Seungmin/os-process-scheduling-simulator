@@ -29,7 +29,9 @@ class SRTN : SchedulingAlgorithm(
             if (readyQueue.isNotEmpty()) {
                 if (core.process == null) core.process = pollShortestRemainingProcess()
                 else {
-                    if ((peekShortestRemainingProcess()?.remainWorkload ?: Int.MAX_VALUE) < core.process!!.remainWorkload) {
+                    if ((peekShortestRemainingProcess()?.remainWorkload
+                            ?: Int.MAX_VALUE) < core.process!!.remainWorkload
+                    ) {
                         singleReadyQueue.add(core.process)
                         core.process = pollShortestRemainingProcess()
                     }

@@ -12,8 +12,8 @@ fun Map<Core, List<model.Process?>>.toGanttChart(): Map<Core, List<GanttChartIte
 
         resultMap[core] = mutableListOf()
         list.forEach { process ->
-            if(process != null) {
-                if(resultMap[core]?.lastOrNull()?.process != process) {
+            if (process != null) {
+                if (resultMap[core]?.lastOrNull()?.process != process) {
                     resultMap[core]?.add(
                         GanttChartItem(
                             process = process,
@@ -25,7 +25,7 @@ fun Map<Core, List<model.Process?>>.toGanttChart(): Map<Core, List<GanttChartIte
                     val start = resultMap[core]?.lastOrNull()?.time?.first ?: time
 
                     resultMap[core]?.let { list ->
-                        if(list.isNotEmpty())
+                        if (list.isNotEmpty())
                             resultMap[core]?.add(list.removeLast().copy(time = IntRange(start, time + 1)))
                     }
                 }

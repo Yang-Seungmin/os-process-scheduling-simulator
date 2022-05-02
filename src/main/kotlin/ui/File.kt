@@ -11,7 +11,7 @@ import java.io.File
 fun ProcessesJsonFileLoadDialog(
     parent: Frame? = null,
     onCloseRequest: (directory: String?, file: String?) -> Unit
-) = AwtWindow (
+) = AwtWindow(
     create = {
         object : FileDialog(parent, "Choose a file", LOAD) {
             override fun setVisible(value: Boolean) {
@@ -26,6 +26,7 @@ fun ProcessesJsonFileLoadDialog(
     },
     dispose = FileDialog::dispose
 )
+
 @Composable
 fun ProcessesJsonFileSaveDialog(
     parent: Frame? = null,
@@ -56,7 +57,7 @@ fun importFromJsonFileDialog(window: ComposeWindow): File? {
         isVisible = true
     }.files
 
-    return if(files.isNotEmpty()) files[0] else null
+    return if (files.isNotEmpty()) files[0] else null
 }
 
 fun exportFromJsonFileDialog(window: ComposeWindow): File? {
@@ -68,5 +69,5 @@ fun exportFromJsonFileDialog(window: ComposeWindow): File? {
         isVisible = true
     }.files
 
-    return if(files.isNotEmpty()) files[0] else null
+    return if (files.isNotEmpty()) files[0] else null
 }
