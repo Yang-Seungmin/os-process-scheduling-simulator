@@ -86,6 +86,7 @@ fun GanttChart(
                 }
 
                 GanttChartArrivalBar(
+                    algorithmRunnerState.time,
                     accumulation.value,
                     processState.processes,
                     scrollAmount
@@ -97,6 +98,7 @@ fun GanttChart(
 
                     items(entries.size) {
                         GanttChartBar(
+                            algorithmRunnerState.time,
                             accumulation.value,
                             entries[it].key,
                             entries[it].value,
@@ -113,6 +115,7 @@ fun GanttChart(
 
 @Composable
 fun GanttChartArrivalBar(
+    time: Int,
     accumulation: Dp,
     processes: List<Process>,
     scrollAmount: Float
@@ -145,6 +148,8 @@ fun GanttChartArrivalBar(
                 width = maxWidth
             }
 
+            GanttChartLine(scrollAmount, accumulation, time, width)
+
             processes.forEachIndexed { i, _ ->
                 if (scrollAmount.toDp() <= accumulation * (processes[i].arrivalTime) &&
                     accumulation * (processes[i].arrivalTime) <= scrollAmount.toDp() + width
@@ -176,6 +181,7 @@ fun GanttChartArrivalBar(
 
 @Composable
 fun GanttChartBar(
+    time: Int,
     accumulation: Dp,
     core: Core,
     ganttChartItems: List<GanttChartItem>,
@@ -211,6 +217,8 @@ fun GanttChartBar(
                 width = maxWidth
             }
 
+            GanttChartLine(scrollAmount, accumulation, time, width)
+
             ganttChartItems.forEachIndexed { i, ganttChartItem ->
                 if (scrollAmount.toDp() <= accumulation * (ganttChartItem.time.last) &&
                     accumulation * (ganttChartItem.time.first) <= scrollAmount.toDp() + width
@@ -233,7 +241,30 @@ fun GanttChartBar(
                     }
                 }
             }
+
+
+
         }
+    }
+}
+
+@Composable
+private fun GanttChartLine(
+    scrollAmount: Float,
+    accumulation: Dp,
+    time: Int,
+    width: Dp
+) {
+    if (scrollAmount.toDp() <= accumulation * time &&
+        accumulation * time <= scrollAmount.toDp() + width
+    ) {
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .fillMaxHeight()
+                .offset(x = accumulation * time - scrollAmount.toDp() - 0.5.dp)
+                .background(MaterialTheme.colors.primary)
+        )
     }
 }
 
