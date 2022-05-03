@@ -68,7 +68,9 @@ fun ResultScreen(
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
-            val dummyResultCount = (maxHeight / itemHeight).toInt()
+            LaunchedEffect(maxHeight) {
+                resultState.dummyProcessCount = (maxHeight / itemHeight).toInt()
+            }
 
             LazyColumn(
                 state = resultState.scrollState
@@ -81,8 +83,8 @@ fun ResultScreen(
                     ResultItem(maxWidth, resultState.resultTable[index])
                 }
 
-                if (dummyResultCount - resultState.resultTable.size > 0) {
-                    items(dummyResultCount - resultState.resultTable.size) {
+                if (resultState.dummyProcessCount - resultState.resultTable.size > 0) {
+                    items(resultState.dummyProcessCount - resultState.resultTable.size) {
                         DummyResultItem(maxWidth)
                     }
                 }

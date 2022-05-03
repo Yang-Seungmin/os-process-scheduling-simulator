@@ -11,7 +11,7 @@ class ProcessState {
     var dummyProcessCount by mutableStateOf(0)
 
     suspend fun scrollToLast() {
-        processesScrollState.animateScrollToItem(if (processes.size > 0) processes.size - 1 else 0)
+        processesScrollState.animateScrollToItem(if (processes.size >= dummyProcessCount) processes.size else 0)
     }
 }
 
