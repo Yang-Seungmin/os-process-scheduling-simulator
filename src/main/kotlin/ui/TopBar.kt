@@ -87,7 +87,7 @@ fun AlgorithmRunnerTool(
                 ) {
                     RRQuantumSlider(
                         rrQuantum,
-                        enabled = algorithmRunningState == AlgorithmRunningState.Stopped
+                        enabled = algorithmRunningState == AlgorithmRunningState.Stopped || algorithmRunningState == AlgorithmRunningState.Ended
                     ) {
                         rrQuantum = it
                     }

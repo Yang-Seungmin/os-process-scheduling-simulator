@@ -2,6 +2,7 @@ package ui.state
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import model.Core
@@ -14,7 +15,7 @@ class GanttChartState {
 
     val ganttChartLazyListState = LazyListState()
 
-    val ganttChartMapState = mutableStateMapOf<Core, MutableList<GanttChartItem>>()
+    val ganttChartMapState = mutableStateMapOf<Core, SnapshotStateList<GanttChartItem>>()
 
     suspend fun scrollGanttChartToTime(time: Int, accumulation: Dp) {
         val autoScrollThreshold = (ganttChartWidth * 0.65f).value

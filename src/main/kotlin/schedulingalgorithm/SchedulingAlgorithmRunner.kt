@@ -1,5 +1,6 @@
 package schedulingalgorithm
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import kotlinx.coroutines.*
@@ -11,13 +12,14 @@ import ui.state.CoreState
 import ui.state.ReadyQueueState
 import ui.state.AlgorithmRunnerState
 import java.util.*
+import kotlin.collections.ArrayList
 
 class SchedulingAlgorithmRunner(
     val algorithmRunnerState: AlgorithmRunnerState,
     private val coreState: CoreState,
     private val readyQueueState: ReadyQueueState,
     private val totalPowerConsumption: SnapshotStateMap<Core, Double>,
-    private val ganttChartRecord: SnapshotStateMap<Core, MutableList<GanttChartItem>>,
+    private val ganttChartRecord: SnapshotStateMap<Core, SnapshotStateList<GanttChartItem>>,
     private val resultTable: SnapshotStateList<ExecuteResult>,
     private val processes: SnapshotStateList<Process>
 ) {
@@ -41,18 +43,20 @@ class SchedulingAlgorithmRunner(
         totalPowerConsumption.clear()
         ganttChartRecord.clear()
         resultTable.clear()
-        with(utilizationTimeLine) {
-            clear()
-            cores.forEach { this[it] = mutableListOf(0.0) }
+
+        utilizationTimeLine.clear()
+        processRecord.clear()
+        ganttChartRecord.clear()
+        coreState.utilizationPerCore.clear()
+        coreState.totalPowerConsumptionPerCore.clear()
+        cores.forEach {core ->
+            utilizationTimeLine[core] = mutableListOf(0.0)
+            processRecord[core] = mutableListOf()
+            ganttChartRecord[core] = mutableStateListOf()
+            coreState.utilizationPerCore[core] = 0.0
+            coreState.totalPowerConsumptionPerCore[core] = 0.0
         }
-        with(processRecord) {
-            clear()
-            cores.forEach { this[it] = mutableListOf() }
-        }
-        with(ganttChartRecord) {
-            clear()
-            cores.forEach { this[it] = mutableListOf() }
-        }
+
         processes.forEach {
             it.doneWorkload = 0
             it.burstTime = 0

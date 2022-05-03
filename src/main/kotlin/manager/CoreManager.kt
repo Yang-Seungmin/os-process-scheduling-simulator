@@ -1,5 +1,6 @@
 package manager
 
+import androidx.compose.runtime.mutableStateListOf
 import model.Core
 import ui.state.CoreState
 import ui.state.GanttChartState
@@ -40,7 +41,7 @@ class CoreManager(
         with(ganttChartState.ganttChartMapState) {
             clear()
             coreState.cores.filterNotNull().forEach {
-                put(it, mutableListOf())
+                put(it, mutableStateListOf())
             }
         }
     }

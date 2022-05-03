@@ -21,7 +21,7 @@ import util.generateRandomProcesses
 
 val sizeMaxRange = 0..15
 val arrivalTimeMaxRange = 0..30
-val workloadMaxRange = 0..50
+val workloadMaxRange = 1..50
 
 @Composable
 fun RandomProcessGenerator(
