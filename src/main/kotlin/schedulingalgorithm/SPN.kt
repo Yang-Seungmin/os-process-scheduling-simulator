@@ -12,6 +12,10 @@ class SPN : SchedulingAlgorithm(
         return process
     }
 
+    override fun beforeStart() {
+        // Do nothing
+    }
+
     override fun putProcessIntoReadyQueue(processes: List<Process>) {
         processes.forEach {
             singleReadyQueue.offer(it)

@@ -18,6 +18,10 @@ class SRTN : SchedulingAlgorithm(
         return singleReadyQueue.minByOrNull { it.remainWorkload }
     }
 
+    override fun beforeStart() {
+        // Do nothing
+    }
+
     override fun putProcessIntoReadyQueue(processes: List<Process>) {
         processes.forEach {
             singleReadyQueue.offer(it)

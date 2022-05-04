@@ -6,6 +6,10 @@ class HRRN : SchedulingAlgorithm(
     algorithmName = "HRRN",
     readyQueueSize = 1
 ) {
+    override fun beforeStart() {
+        // Do nothing
+    }
+
     override fun putProcessIntoReadyQueue(processes: List<Process>) {
         processes.forEach {
             singleReadyQueue.offer(it)

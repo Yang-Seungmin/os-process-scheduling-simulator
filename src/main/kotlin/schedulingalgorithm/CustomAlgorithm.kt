@@ -11,7 +11,8 @@ class CustomAlgorithm : SchedulingAlgorithm(
 ) {
     private val mainReadyQueue get() = readyQueue[0]
     private val onlyOneRemainingTimeProcessReadyQueue get() = readyQueue[1]
-    private var containEcoreInProcessor = false
+
+    private var isEcoreInProcessor = false
 
     private fun pollLongestRemainingProcess(queue: Queue<Process>): Process? {
         val process = queue.maxByOrNull { it.remainWorkload }
@@ -23,6 +24,10 @@ class CustomAlgorithm : SchedulingAlgorithm(
         val process = queue.minByOrNull { it.remainWorkload }
         queue.remove(process)
         return process
+    }
+
+    override fun beforeStart() {
+        isEcoreInProcessor = cores.find { it is Core.ECore } != null
     }
 
     override fun putProcessIntoReadyQueue(processes: List<Process>) {
@@ -70,7 +75,7 @@ class CustomAlgorithm : SchedulingAlgorithm(
         cores.forEach { core ->
             if (core is Core.PCore) {
                 core.process?.let { process ->
-                    if (process.remainWorkload == 1) {
+                    if (isEcoreInProcessor && process.remainWorkload == 1) {
                         onlyOneRemainingTimeProcessReadyQueue.offer(process)
                         core.process = null
                     }

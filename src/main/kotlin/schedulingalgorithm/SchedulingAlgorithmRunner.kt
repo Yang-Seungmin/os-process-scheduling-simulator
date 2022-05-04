@@ -84,6 +84,8 @@ class SchedulingAlgorithmRunner(
             }
 
             with(algorithmRunnerState) {
+                schedulingAlgorithm.beforeStart()
+
                 while (!isEnd) {
                     /*
                 1. Process의 arrival time이 현재 시간과 일치하면 Scheduling Algorithm에 프로세스 전달

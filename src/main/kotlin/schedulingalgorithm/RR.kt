@@ -16,6 +16,10 @@ class RR : SchedulingAlgorithm("RR") {
         }
     }
 
+    override fun beforeStart() {
+        //Do nothing
+    }
+
     override fun putProcessIntoReadyQueue(processes: List<Process>) {
         processes.forEach {
             singleReadyQueue.offer(it)

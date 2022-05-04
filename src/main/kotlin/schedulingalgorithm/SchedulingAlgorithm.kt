@@ -17,6 +17,7 @@ abstract class SchedulingAlgorithm(
     private val _cores = mutableListOf<Core>()
     val cores: List<Core> get() = _cores
 
+    abstract fun beforeStart()
     abstract fun putProcessIntoReadyQueue(processes: List<Process>)
     abstract fun beforeWork(time: Int)
     abstract fun afterWork(time: Int)
