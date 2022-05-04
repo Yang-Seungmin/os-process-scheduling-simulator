@@ -3,6 +3,7 @@ package ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import manager.ProcessManager
 import model.Process
+import ui.state.ProcessState
 
 val itemHeight = 20.dp
 val processColumnItems = listOf(
@@ -125,11 +127,14 @@ fun ProcessesScreen(
                     stickyHeader {
                         ProcessesHeader()
                     }
-                    items(processes.size) { index ->
+
+                    itemsIndexed(
+                        items = processes,
+                        key = { _, p -> p.pid }) { index, p ->
                         ProcessItem(
                             index = index,
                             width = width,
-                            process = processes[index],
+                            process = p,
                             editable = enabled,
                             onUpdate = { p1, p2 ->
                                 processManager.modifyProcess(p1, p2)
@@ -166,7 +171,7 @@ fun ProcessesScreen(
                     .fillMaxWidth()
                     .fillMaxHeight()
             ) {
-                ProcessAddScreen(enabled) { name, at, wl ->
+                ProcessAddScreen(processManager.processState, enabled) { name, at, wl ->
                     processManager.addProcess(name, at, wl)
                     scroll = (scroll + 1) % 2
                 }
@@ -318,10 +323,11 @@ fun DummyProcessItem() {
 
 @Composable
 fun ProcessAddScreen(
+    processState: ProcessState,
     enabled: Boolean,
     onProcessAdd: (String, Int, Int) -> Unit
 ) {
-    var processName by remember { mutableStateOf("") }
+    var processName by remember { mutableStateOf("P${processState.processes.size}") }
     var arrivalTime by remember { mutableStateOf("0") }
     var workload by remember { mutableStateOf("1") }
 
@@ -355,6 +361,7 @@ fun ProcessAddScreen(
                     arrivalTime.toIntOrNull() ?: 0,
                     workload.toIntOrNull() ?: 1
                 )
+                processName = "P${processState.processes.size}"
             },
             enabled =
             processName.isNotBlank()
