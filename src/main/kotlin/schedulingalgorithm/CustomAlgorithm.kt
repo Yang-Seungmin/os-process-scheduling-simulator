@@ -11,6 +11,7 @@ class CustomAlgorithm : SchedulingAlgorithm(
 ) {
     private val mainReadyQueue get() = readyQueue[0]
     private val onlyOneRemainingTimeProcessReadyQueue get() = readyQueue[1]
+    private var containEcoreInProcessor = false
 
     private fun pollLongestRemainingProcess(queue: Queue<Process>): Process? {
         val process = queue.maxByOrNull { it.remainWorkload }
