@@ -1,101 +1,125 @@
 package ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import model.ExecuteResult
-import util.toPx
-import kotlin.math.roundToInt
+import model.normalizedTurnAroundTime
+import model.waitingTime
+import ui.state.ResultState
 
+val headerItems = listOf(
+    "Process",//"Process Name",
+    "AT",//"Arrival Time (AT)",
+    "BT",//"Burst Time (BT)",
+    "WT",//"Waiting Time (WT)",
+    "TT",//"Turnaround Time (TT)",
+    "NTT"//"Normalized Turnaround Time(NTT)"
+)
+val headerItemCount = headerItems.size
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ResultScreen(
     modifier: Modifier = Modifier,
-    results: List<ExecuteResult>
+    resultState: ResultState,
 ) {
-    val dummyResultCount = rememberSaveable { mutableStateOf(0) }
-    val itemHeightPx = itemHeight.toPx()
-    val scrollState = rememberLazyListState()
-
-    rememberCoroutineScope().launch {
-        scrollState.animateScrollToItem(if(results.size - 1 < 0) 0 else results.size - 1)
+    LaunchedEffect(resultState.resultTable.size) {
+        resultState.scrollToLast()
     }
 
-    Row(
-        modifier = modifier
-            .padding(horizontal = 8.dp)
-            .customBorder()
-            .onGloballyPositioned {
-                dummyResultCount.value = (it.size.height / itemHeightPx).roundToInt()
-            }
-    ) {
-        Box(
-            modifier = Modifier
+    Column {
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "Result (${resultState.resultTable.size})",
+                style = MaterialTheme.typography.subtitle1
+            )
+
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "Average NTT : ${
+                    String.format(
+                        "%.3f",
+                        resultState.resultTable.map { it.normalizedTurnAroundTime }.average()
+                    )
+                }",
+                style = MaterialTheme.typography.body1
+            )
+        }
+
+        BoxWithConstraints(
+            modifier = modifier
+                .padding(horizontal = 8.dp)
+                .customBorder()
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
-            Column {
-                ResultHeader()
-                LazyColumn(
-                    state = scrollState
-                ) {
-                    items(results.size) { index ->
-                        ResultItem(results[index])
-                    }
+            LaunchedEffect(maxHeight) {
+                resultState.dummyProcessCount = (maxHeight / itemHeight).toInt()
+            }
 
-                    if (dummyResultCount.value - results.size > 0) {
-                        items(dummyResultCount.value - results.size) {
-                            DummyResultItem()
-                        }
+            LazyColumn(
+                state = resultState.scrollState
+            ) {
+                stickyHeader {
+                    ResultHeader(maxWidth)
+                }
+
+                items(resultState.resultTable.size) { index ->
+                    ResultItem(maxWidth, resultState.resultTable[index])
+                }
+
+                if (resultState.dummyProcessCount - resultState.resultTable.size > 0) {
+                    items(resultState.dummyProcessCount - resultState.resultTable.size) {
+                        DummyResultItem(maxWidth)
                     }
                 }
             }
+
+            VerticalScrollbar(
+                modifier = Modifier.align(Alignment.CenterEnd)
+                    .fillMaxHeight(),
+                adapter = rememberScrollbarAdapter(resultState.scrollState)
+            )
         }
     }
 
 }
 
 @Composable
-fun ResultHeader() {
-    Row(modifier = Modifier.fillMaxWidth()
-        .height(IntrinsicSize.Min)) {
-        listOf(
-            "Process",//"Process Name",
-            "AT",//"Arrival Time (AT)",
-            "BT",//"Burst Time (BT)",
-            "WT",//"Waiting Time (WT)",
-            "TT",//"Turnaround Time (TT)",
-            "NTT"//"Normalized Turnaround Time(NTT)"
-        ).apply {
-            forEach {
-                Box(
-                    modifier = Modifier.weight(1f / this.size)
-                        .background(MaterialTheme.colors.primary)
-                        .fillMaxHeight()
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxSize().padding(2.dp),
-                        text = it,
-                        color = MaterialTheme.colors.onPrimary,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
+fun ResultHeader(
+    width: Dp
+) {
+    Row(
+        modifier = Modifier.width(width).height(itemHeight)
+    ) {
+        headerItems.forEach {
+            Box(
+                modifier = Modifier.width(width / headerItemCount).height(itemHeight)
+                    .background(MaterialTheme.colors.primary)
+                    .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+            ) {
+                Text(
+                    modifier = Modifier.width(width / headerItemCount).height(itemHeight).padding(2.dp),
+                    text = it,
+                    color = MaterialTheme.colors.onPrimary,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -103,62 +127,52 @@ fun ResultHeader() {
 
 @Composable
 fun ResultItem(
+    width: Dp,
     executeResult: ExecuteResult
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .fillMaxSize()
+        modifier = Modifier.width(width).height(itemHeight)
     ) {
         with(executeResult) {
             listOf(
                 process.processName,
                 process.arrivalTime.toString(),
                 process.burstTime.toString(),
-                (turnaroundTime - process.burstTime).toString(),
+                waitingTime.toString(),
                 turnaroundTime.toString(),
-                String.format("%.3f", executeResult.turnaroundTime / executeResult.process.burstTime.toDouble())
-            ).apply {
-                forEachIndexed { i, s ->
-                    Box(
-                        modifier = Modifier.weight(1f / this.size)
-                            .background(if(i == 0) Color(process.processColor) else MaterialTheme.colors.background)
-                            .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                    ) {
-                        Text(
-                            modifier = Modifier.fillMaxSize().padding(2.dp),
-                            text = s,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                String.format("%.3f", normalizedTurnAroundTime)
+            ).forEachIndexed { i, s ->
+                Box(
+                    modifier = Modifier.width(width / headerItemCount)
+                        .background(if (i == 0) Color(process.processColor) else MaterialTheme.colors.background)
+                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+                ) {
+                    Text(
+                        modifier = Modifier.width(width / headerItemCount).height(itemHeight).padding(2.dp),
+                        text = s,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
+
         }
 
     }
 }
 
 @Composable
-fun DummyResultItem() {
+fun DummyResultItem(
+    width: Dp
+) {
     Row(
-        modifier = Modifier.fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .fillMaxSize()
+        modifier = Modifier.width(width).height(itemHeight)
     ) {
-        listOf("", "", "", "", "", "").apply {
-            forEach {
-                Box(
-                    modifier = Modifier.weight(1f / this.size)
-                        .background(MaterialTheme.colors.background)
-                        .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxSize().padding(2.dp),
-                        text = it,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+        headerItems.forEach {
+            Box(
+                modifier = Modifier.width(width / headerItemCount).height(itemHeight)
+                    .background(MaterialTheme.colors.background)
+                    .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
+            )
         }
     }
 }

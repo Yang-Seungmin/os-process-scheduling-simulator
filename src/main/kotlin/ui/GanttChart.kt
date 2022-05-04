@@ -1,175 +1,123 @@
 package ui
 
-import androidx.compose.foundation.*
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
-import coreColors
-import model.GanttChartItem
 import model.Core
+import model.GanttChartItem
+import model.Process
 import model.range
+import ui.state.GanttChartState
+import ui.state.ProcessState
+import ui.state.AlgorithmRunnerState
 import util.toDp
 import util.toPx
-import kotlin.math.*
 
 @Composable
 fun GanttChart(
     modifier: Modifier = Modifier,
-    accumulation: Dp,
-    processes: List<model.Process>,
-    ganttChartItems: Map<Core, List<GanttChartItem>>,
-    powerConsumptions: Map<Core, List<Double>>,
-    utilizations: Map<Core, List<Double>>,
-    state: LazyListState
+    ganttChartState: GanttChartState,
+    processState: ProcessState,
+    algorithmRunnerState: AlgorithmRunnerState
 ) {
-    val scrollAmount = state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
-    Column(
-        modifier = modifier.padding(horizontal = 8.dp)
-    ) {
-        GanttChartArrivalBar(
-            accumulation,
-            processes,
-            state.firstVisibleItemIndex * accumulation.toPx() + state.firstVisibleItemScrollOffset
-        )
-        ganttChartItems.entries.forEach { (core, list) ->
-            GanttChartBar(
-                accumulation,
-                core,
-                list,
-                scrollAmount
-            )
-        }
-        GanttChartGraph(
-            "Power consumption graph",
-            "W",
-            accumulation,
-            powerConsumptions.mapKeys { it.key.name },
-            scrollAmount
-        )
-        GanttChartGraph(
-            "Utilization",
-            "%",
-            accumulation,
-            utilizations.mapKeys { it.key.name }.mapValues { it.value.map { (it * 10000).roundToInt() / 100.0 } },
-            scrollAmount
-        )
+    val lazyListState = ganttChartState.ganttChartLazyListState
+    val ganttChartMapState = ganttChartState.ganttChartMapState
 
-        GanttChartScale(accumulation, state)
+    val accumulation = animateDpAsState(GanttChartState.maxAccumulation / ganttChartState.accumulationLevel)
+    val accumulationPx = accumulation.value.toPx()
+    val scrollAmount = lazyListState.firstVisibleItemIndex * accumulationPx + lazyListState.firstVisibleItemScrollOffset
+
+    val entries = ganttChartMapState.entries.sortedBy { it.key.number }
+
+    LaunchedEffect(algorithmRunnerState.time) {
+        ganttChartState.scrollGanttChartToTime(algorithmRunnerState.time, accumulation.value)
     }
-}
 
-@Composable
-fun ColumnScope.GanttChartGraph(
-    graphName: String,
-    unit: String,
-    accumulation: Dp,
-    values: Map<String, List<Double>>,
-    scrollAmount: Float
-) {
-    val onlyValues = values.values.flatten()
-    val max = (onlyValues.maxOfOrNull { it } ?: (1 / 1.1)) * 1.1
-    var width = 0
-    Box(
-        Modifier.weight(4f)
-            .fillMaxWidth()
-            .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-    ) {
-        Box(
-            modifier = Modifier
-                .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                .padding(start = 1.dp)
-                .fillMaxHeight()
-                .onGloballyPositioned {
-                    width = it.size.width
-                }
-        ) {
-            val colors = coreColors.map { Color(it) }
-            var height = 0
-            Canvas(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .onGloballyPositioned {
-                        height = it.size.height
-                    }
+    Column {
+        Column {
+            Row {
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = "Gantt Chart",
+                    style = MaterialTheme.typography.subtitle1
+                )
+
+                Text(
+                    modifier = Modifier.clickable {
+                        if (ganttChartState.accumulationLevel > 1)
+                            ganttChartState.accumulationLevel /= 2
+                    }.padding(8.dp),
+                    text = "+",
+                    style = MaterialTheme.typography.subtitle1,
+                    color = MaterialTheme.colors.primary
+                )
+
+                Text(
+                    modifier = Modifier.clickable {
+                        if (ganttChartState.accumulationLevel < 32)
+                            ganttChartState.accumulationLevel *= 2
+                    }.padding(8.dp),
+                    text = "-",
+                    style = MaterialTheme.typography.subtitle1,
+                    color = MaterialTheme.colors.primary
+                )
+            }
+
+            BoxWithConstraints(
+                modifier = modifier.padding(horizontal = 8.dp)
             ) {
-                values.entries.forEachIndexed { index, (name, items) ->
-                    var x1 = 0f
-                    var y1 = 0f
-                    items.forEachIndexed { time, value ->
-                        if (scrollAmount <= accumulation.toPx() * time + 149.dp.toPx()) {
-                            val x2 = accumulation.toPx() * time - scrollAmount + 149.dp.toPx()
-                            val y2 = ((1 - value / max) * height).toFloat()
+                LaunchedEffect(maxWidth) {
+                    ganttChartState.ganttChartWidth = maxWidth
+                }
 
-                            //if (x2 <= width) {
-                                drawCircle(
-                                    color = colors[index],
-                                    radius = 1.dp.toPx(),
-                                    center = Offset(x2, y2)
-                                )
+                GanttChartArrivalBar(
+                    algorithmRunnerState.time,
+                    accumulation.value,
+                    processState.processes,
+                    scrollAmount
+                )
 
-                                if (!x1.isNaN() && !y1.isNaN()) {
-                                    drawLine(
-                                        color = colors[index],
-                                        start = Offset(x1, y1),
-                                        end = Offset(x2, y2),
-                                        strokeWidth = 1.dp.toPx()
-                                    )
-                                }
-                            //}
+                LazyColumn(
+                    modifier = modifier.padding(vertical = 20.dp)
+                ) {
 
-                            x1 = x2
-                            y1 = y2
-                        }
+                    items(entries.size) {
+                        GanttChartBar(
+                            algorithmRunnerState.time,
+                            accumulation.value,
+                            entries[it].key,
+                            entries[it].value,
+                            scrollAmount
+                        )
                     }
                 }
+
+                GanttChartScale(accumulation.value, lazyListState)
             }
         }
-        Box(
-            modifier = Modifier
-                .background(MaterialTheme.colors.background)
-                .fillMaxHeight()
-                .width(150.dp)
-                .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
-                .padding(horizontal = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = graphName,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                modifier = Modifier.align(Alignment.TopEnd),
-                text = "${((max * 10).roundToInt() / 10.0)}$unit",
-                maxLines = 1,
-                style = MaterialTheme.typography.overline
-            )
-            Text(
-                modifier = Modifier.align(Alignment.BottomEnd),
-                text = "0$unit",
-                maxLines = 1,
-                style = MaterialTheme.typography.overline
-            )
-        }
     }
 }
 
 @Composable
-fun ColumnScope.GanttChartArrivalBar(
+fun GanttChartArrivalBar(
+    time: Int,
     accumulation: Dp,
-    processes: List<model.Process>,
+    processes: List<Process>,
     scrollAmount: Float
 ) {
     Row(
@@ -189,13 +137,23 @@ fun ColumnScope.GanttChartArrivalBar(
                 maxLines = 1
             )
         }
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .fillMaxHeight()
         ) {
+            var width by remember { mutableStateOf(0.dp) }
+
+            LaunchedEffect(maxWidth) {
+                width = maxWidth
+            }
+
+            GanttChartLine(scrollAmount, accumulation, time, width)
+
             processes.forEachIndexed { i, _ ->
-                if (scrollAmount <= accumulation.toPx() * (processes[i].arrivalTime))
+                if (scrollAmount.toDp() <= accumulation * (processes[i].arrivalTime) &&
+                    accumulation * (processes[i].arrivalTime) <= scrollAmount.toDp() + width
+                )
                     Box(
                         modifier = Modifier.height(20.dp)
                             .padding(start = accumulation * (processes[i].arrivalTime) - scrollAmount.toDp()),
@@ -222,7 +180,8 @@ fun ColumnScope.GanttChartArrivalBar(
 }
 
 @Composable
-fun ColumnScope.GanttChartBar(
+fun GanttChartBar(
+    time: Int,
     accumulation: Dp,
     core: Core,
     ganttChartItems: List<GanttChartItem>,
@@ -241,19 +200,29 @@ fun ColumnScope.GanttChartBar(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "${core.name}",
-                color = if (core == null) MaterialTheme.colors.error else MaterialTheme.colors.onBackground,
+                text = core.name,
+                color = MaterialTheme.colors.onBackground,
                 maxLines = 1
             )
         }
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .border(width = 0.5.dp, color = MaterialTheme.colors.surface)
                 .fillMaxHeight()
         ) {
+            var width by remember { mutableStateOf(0.dp) }
+
+            LaunchedEffect(maxWidth) {
+                width = maxWidth
+            }
+
+            GanttChartLine(scrollAmount, accumulation, time, width)
+
             ganttChartItems.forEachIndexed { i, ganttChartItem ->
-                if (scrollAmount.toDp() <= accumulation * (ganttChartItem.time.last)) {
+                if (scrollAmount.toDp() <= accumulation * (ganttChartItem.time.last) &&
+                    accumulation * (ganttChartItem.time.first) <= scrollAmount.toDp() + width
+                ) {
                     val padding = accumulation * ganttChartItem.time.first
 
                     Box(
@@ -272,19 +241,42 @@ fun ColumnScope.GanttChartBar(
                     }
                 }
             }
+
+
+
         }
     }
 }
 
 @Composable
-fun ColumnScope.GanttChartScale(
+private fun GanttChartLine(
+    scrollAmount: Float,
+    accumulation: Dp,
+    time: Int,
+    width: Dp
+) {
+    if (scrollAmount.toDp() <= accumulation * time &&
+        accumulation * time <= scrollAmount.toDp() + width
+    ) {
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .fillMaxHeight()
+                .offset(x = accumulation * time - scrollAmount.toDp() - 0.5.dp)
+                .background(MaterialTheme.colors.primary)
+        )
+    }
+}
+
+@Composable
+fun BoxScope.GanttChartScale(
     accumulation: Dp,
     state: LazyListState
 ) {
     val bigScaleDp = (200 / accumulation.value).toInt() * accumulation
 
     Row(
-        modifier = Modifier.height(20.dp)
+        modifier = Modifier.height(20.dp).align(Alignment.BottomStart)
     ) {
         Box(
             modifier = Modifier.width(149.5.dp),
@@ -305,7 +297,6 @@ fun ColumnScope.GanttChartScale(
         ) {
             items(Int.MAX_VALUE) { i ->
                 if ((accumulation * i).value.toInt() % bigScaleDp.value.toInt() == 0) {
-
                     Box(
                         modifier = Modifier.width(accumulation).height(18.dp),
                         contentAlignment = Alignment.BottomStart
@@ -322,7 +313,6 @@ fun ColumnScope.GanttChartScale(
                             fontSize = 8.sp
                         )
                     }
-
                 } else {
                     Box(
                         modifier = Modifier.width(accumulation).fillMaxHeight(0.9f),
@@ -337,8 +327,4 @@ fun ColumnScope.GanttChartScale(
             }
         }
     }
-}
-
-fun Number.toDegree(): Double {
-    return Math.toDegrees(this.toDouble())
 }

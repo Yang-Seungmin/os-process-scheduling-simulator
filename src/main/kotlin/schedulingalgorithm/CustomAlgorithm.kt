@@ -32,14 +32,14 @@ class CustomAlgorithm : SchedulingAlgorithm(
     }
 
     override fun beforeWork(time: Int) {
-        cores.filterIsInstance<Core.PCore>().forEach {core ->
+        cores.filterIsInstance<Core.PCore>().forEach { core ->
             if (mainReadyQueue.isNotEmpty()) {
                 if (core.process == null) {
                     core.process = pollLongestRemainingProcess(queue = mainReadyQueue)
                 }
             }
         }
-        cores.filterIsInstance<Core.ECore>().forEach {core ->
+        cores.filterIsInstance<Core.ECore>().forEach { core ->
             if (onlyOneRemainingTimeProcessReadyQueue.isNotEmpty()) {
                 if (core.process == null) {
                     core.process = pollShortestRemainingProcess(queue = onlyOneRemainingTimeProcessReadyQueue)
@@ -71,6 +71,15 @@ class CustomAlgorithm : SchedulingAlgorithm(
                 core.process?.let { process ->
                     if (process.remainWorkload == 1) {
                         onlyOneRemainingTimeProcessReadyQueue.offer(process)
+                        core.process = null
+                    }
+                }
+            } else if (core is Core.ECore && core.process != null) {
+                if (core.process!!.remainWorkload > 1) {
+                    if(cores.count { findCore ->
+                        findCore is Core.PCore && findCore.process == null
+                    } > mainReadyQueue.size) {
+                        mainReadyQueue.offer(core.process)
                         core.process = null
                     }
                 }

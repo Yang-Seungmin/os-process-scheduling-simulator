@@ -35,7 +35,7 @@ class RR : SchedulingAlgorithm("RR") {
         // If reside time is greater than rr quantum, preempt
         cores.forEach { core ->
             resideTimes[core]?.let {
-                resideTimes[core] = core.process to ( if(it.first == core.process) it.second + 1 else 1 )
+                resideTimes[core] = core.process to (if (it.first == core.process) it.second + 1 else 1)
             }
             core.process?.let { process ->
                 if ((resideTimes[core]?.second ?: 0) >= rrQuantum) {
