@@ -74,6 +74,15 @@ class CustomAlgorithm : SchedulingAlgorithm(
                         core.process = null
                     }
                 }
+            } else if (core is Core.ECore && core.process != null) {
+                if (core.process!!.remainWorkload > 1) {
+                    if(cores.count { findCore ->
+                        findCore is Core.PCore && findCore.process == null
+                    } > mainReadyQueue.size) {
+                        mainReadyQueue.offer(core.process)
+                        core.process = null
+                    }
+                }
             }
         }
     }
