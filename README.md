@@ -69,14 +69,37 @@ TopBarKt, ProcessKt, CoreKt, ResultTableKt, ReadyQueueChartKt, GanttChartKt 파�
 #### Custom Scheduling Algorithm
 작동원리 작성 "해줘"
 
+### System Properties
+1. P-Core, E-Core
+2. E-Core는 1초에 1의 일을 처리, 1초에 전력 1W 소모
+3. P-Core는 1초의 2의 일을 처리, 1초의 전력 3W 소모
+4. P-Core, E-Core의 대기 전력은 0.1W
+5. 1초 단위로 이루어지는 Scheduling -> P-Core에 할당된 작업의 남은 일의 양이 1이어도, 1초와 3W를 소모
+
 ## Usage
 ### Process
 <p align="center"><img width="50%" alt="스크린샷 2022-05-05 오후 10 56 19" src="https://user-images.githubusercontent.com/23609119/166939010-6592c0bc-112a-4c6e-b951-8003fb529387.png"></p>
 원하는 프로세스명, Arrival Time, Workload를 입력 후 Add 버튼을 눌러 프로세스를 추가할 수 있습니다.  
 Export to.. 기능으로 현재 프로세스의 상태를 json 파일로 내보낼 수 있으면 Import from.. 기능으로 json 파일로부터 프로세스의 상태를 불러올 수 있습니다.  
+
 <p align="center"><img width="50%" alt="스크린샷 2022-05-05 오후 10 59 02" src="https://user-images.githubusercontent.com/23609119/166939550-3821bbac-1e03-44de-8937-dcceb0dcb84f.png"></p>
 프로세스를 좌클릭하여 수정할 수 있게 만들 수 있습니다. 좌클릭한 상태에서는 좌클릭한 프로세스의 Process Name, Arrival Time, Workload를 수정할 수 있으며 우클릭을 하여 Context Menu를 열 수 있습니다.
 
+<p align="center"><img width="50%" alt="스크린샷 2022-05-05 오후 11 07 51" src="https://user-images.githubusercontent.com/23609119/166941358-1f5907ba-362f-4dc7-8712-097277a19b58.png"></p>
+프로세스의 Arrival Time은 간트 차트의 Arrival Time에 자동으로 반영됩니다. 
+
+<p align="center"><img width="50%" alt="스크린샷 2022-05-05 오후 11 14 08" src="https://user-images.githubusercontent.com/23609119/166942763-e25881fd-467d-4c4e-8f67-e28be3e6e84d.png"></p>
+프로세스의 수는 제한이 없습니다. 다만 너무 많은 프로세스를 적용 시 동작이 느려질 수 있습니다(M1 MacBook Air에서 1500개 프로세스까지 테스트).
+
 ### Processor
 <p align="center"><img width="50%" alt="스크린샷 2022-05-05 오후 11 01 41" src="https://user-images.githubusercontent.com/23609119/166940092-68353c2a-11c9-40ea-86be-42cf64e93b1c.png"></p>
-프로세서를 
+프로세서를 추가/삭제하거나 코어의 켜짐/꺼짐, P-Core/E-Core 상태를 변경할 수 있습니다.  
+스케줄링 알고리즘이 작동되는 중에는 각 코어 영역 하단부에 전력 소모 및 전체 시간 대비 일을 하고 있는(프로세스가 점유된) 시간, 전체 전력 소모, 평균 이용률이 interval마다 반영됩니다.  
+
+<p align="center"><img width="50%" alt="스크린샷 2022-05-05 오후 11 17 04" src="https://user-images.githubusercontent.com/23609119/166943369-f2bdb61a-ea46-4f02-950a-f2dcef66983b.png"></p>
+프로세서의 코어 수는 제한이 없습니다. 다만 너무 많은 코어 수를 적용 시 동작이 느려질 수 있으며 화면 크기에 따라 코어 조작 및 정보 확인이 어려울 수 있습니다(M1 MacBook Air에서 64개 코어까지 테스트). 
+
+### Runner Tool
+
+### Ready Queue and Gantt Chart
+
