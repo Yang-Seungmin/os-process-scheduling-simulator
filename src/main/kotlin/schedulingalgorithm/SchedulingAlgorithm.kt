@@ -15,6 +15,7 @@ abstract class SchedulingAlgorithm(
     val algorithmName: String,
     private val readyQueueSize: Int = 1
 ) {
+
     private val _readyQueue = (1..1).map { LinkedList<Process>() }.toMutableList()
 
     /**
