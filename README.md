@@ -1,3 +1,4 @@
+[Generic badge](https://img.shields.io/badge/version-1.0.0-success.svg)
 # os-process-scheduling-simulator
 2022-1학기 KOREATECH 운영체제 프로세스 스케쥴링 알고리즘 과제  
 Instructor: Duksu Kim
