@@ -71,11 +71,19 @@ TopBarKt, ProcessKt, CoreKt, ResultTableKt, ReadyQueueChartKt, GanttChartKt 파�
 
 #### Custom Scheduling Algorithm
 * 가정
- 1. 프로세서는 P-Core와 E-Core만 가질 수 있다.
+ 1. 프로세서는 P-Core와 E-Core만 가질 수 있으며, P-Core와 E-Core의 수를 알고 있다.
  2. 프로세스의 workload, arrival time 정보를 알고 있다.
-* 목적 : P-Core를 최대한 이용하여 입력받은 프로세스를 빠른 시간내에 끝내면서, E-Core를 이용하여 P-Core의 전력낭비를 줄이는 알고리즘을 구현한다.
-* 작동 방식
-
+* 목적  
+P-Core를 최대한 이용하여 입력받은 프로세스를 빠른 시간내에 끝내면서, E-Core를 이용하여 P-Core의 전력낭비를 줄이는 알고리즘을 구현한다.
+* 작동 방식  
+Ready Queue는 2개로 구성되어있으며, Main Ready Queue와 남은 workload가 1인 프로세스가 들어갈 Only One Remaining Time Process Ready Queue(이하 One Ready Queue)가 있다.  
+P-Core는 Main Ready Queue에 있는 프로세스를 우선으로 가져오며, 남은 workload가 큰 프로세스부터 가져온다. Main Ready Queue가 비어있는 경우에는 One Ready Queue에 있는 프로세스를 가져온다.
+E-Core는 One Ready Queue에 있는 프로세스를 우선으로 가져오며, One Ready Queue가 비어있는 경우에는 Main Ready Queue에서 남은 workload가 가장 작은 프로세스를 가져온다.
+P-Core에서 작업중인 프로세스의 남은 workload가 1이되면 해당 프로세스는 선점되고, One Ready Queue에 들어가게 된다.
+E-Core에서 작업중인 프로세스의 남은 workload가 1보다 큰 상태에서 One Ready Queue에 프로세스가 추가되면, E-Core에서 작업 중이던 프로세스는 선점되어 Main Ready Queue에 들어가게 된다.  
+* 결과  
+Custom Scheduling Algorithm은 E-Core가 1개이고, 다른 코어가 모두 P-Core일 때 가장 높은 효율을 가진다.  
+다른 알고리즘과 비교하였을 때 작업을 마치는 데 걸리는 총 시간은 크게 차이나지 않으면서도 낮은 전력소모를 갖는다.
 
 ### System Properties
 1. P-Core, E-Core
