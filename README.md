@@ -70,7 +70,12 @@ TopBarKt, ProcessKt, CoreKt, ResultTableKt, ReadyQueueChartKt, GanttChartKt 파�
 5. HRRN
 
 #### Custom Scheduling Algorithm
-작동원리 작성 "해줘"
+* 가정
+ 1. 프로세서는 P-Core와 E-Core만 가질 수 있다.
+ 2. 프로세스의 workload, arrival time 정보를 알고 있다.
+* 목적 : P-Core를 최대한 이용하여 입력받은 프로세스를 빠른 시간내에 끝내면서, E-Core를 이용하여 P-Core의 전력낭비를 줄이는 알고리즘을 구현한다.
+* 작동 방식
+
 
 ### System Properties
 1. P-Core, E-Core
