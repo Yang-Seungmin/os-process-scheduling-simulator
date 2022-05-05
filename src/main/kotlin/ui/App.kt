@@ -38,39 +38,6 @@ fun FrameWindowScope.MainScreen(
     resultState: ResultState,
     randomProcessGeneratorOpen: () -> Unit
 ) {
-    val onExport: () -> Unit = {
-        exportFromJsonFileDialog(ComposeWindow())?.let { file ->
-            processManager.exportProcessesToFile(file)
-        }
-    }
-    val onImport: () -> Unit = {
-        importFromJsonFileDialog(ComposeWindow())?.let { file ->
-            processManager.importProcessesFromFile(file)
-        }
-    }
-
-    MenuBar {
-        Menu(
-            text = "Process",
-            mnemonic = 'P'
-        ) {
-            Item(
-                text = "Import process list from JSON file",
-                onClick = onImport,
-                shortcut = KeyShortcut(Key.I, ctrl = true)
-            )
-            Item(
-                text = "Export process list to JSON file",
-                onClick = onExport,
-                shortcut = KeyShortcut(Key.E, ctrl = true)
-            )
-            Separator()
-            Item(
-                text = "Open random process generator",
-                onClick = randomProcessGeneratorOpen
-            )
-        }
-    }
 
     MaterialTheme(
         colors = Colors,

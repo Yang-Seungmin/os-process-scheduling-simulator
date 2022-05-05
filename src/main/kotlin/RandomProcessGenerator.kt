@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
 import manager.ProcessManager
+import ui.Colors
+import ui.Typography
 import ui.exportFromJsonFileDialog
 import util.generateRandomProcesses
 
@@ -45,70 +47,75 @@ fun RandomProcessGenerator(
     val actualArrivalTimeRange = calculateRange(arrivalTimeRange.value, arrivalTimeMaxRange)
     val actualWorkloadRange = calculateRange(workloadRange.value, workloadMaxRange)
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(10.dp)
+    MaterialTheme(
+        colors = Colors,
+        typography = Typography
     ) {
-        SliderItem(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Item Count : $actualItemCount",
-            value = itemCount.value,
-            onValueChange = {
-                itemCount.value = it
-            }
-        )
-        RangeSliderItem(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Arrival Time Range : (previous arrival time) + [${actualArrivalTimeRange.first} ~ ${actualArrivalTimeRange.last}]",
-            value = arrivalTimeRange.value,
-            onValueChange = {
-                arrivalTimeRange.value = it
-            }
-        )
-        RangeSliderItem(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Workload Range : [${actualWorkloadRange.first} ~ ${actualWorkloadRange.last}]",
-            value = workloadRange.value,
-            onValueChange = {
-                workloadRange.value = it
-            }
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(10.dp)
         ) {
-            Button(
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    coroutineScope.launch {
-                        processManager.clearProcess()
-                        delay(10)
-                        processManager.addProcesses(
-                            generateRandomProcesses(
-                                size = actualItemCount,
-                                btRange = actualWorkloadRange,
-                                atRange = actualArrivalTimeRange
-                            )
-                        )
-                    }
-                }) {
-                Text("Generate")
-            }
+            SliderItem(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Item Count : $actualItemCount",
+                value = itemCount.value,
+                onValueChange = {
+                    itemCount.value = it
+                }
+            )
+            RangeSliderItem(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Arrival Time Range : (previous arrival time) + [${actualArrivalTimeRange.first} ~ ${actualArrivalTimeRange.last}]",
+                value = arrivalTimeRange.value,
+                onValueChange = {
+                    arrivalTimeRange.value = it
+                }
+            )
+            RangeSliderItem(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Workload Range : [${actualWorkloadRange.first} ~ ${actualWorkloadRange.last}]",
+                value = workloadRange.value,
+                onValueChange = {
+                    workloadRange.value = it
+                }
+            )
 
-            Button(
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    exportFromJsonFileDialog(ComposeWindow())?.let { file ->
-                        Json.encodeToStream(
-                            generateRandomProcesses(
-                                size = actualItemCount,
-                                btRange = actualWorkloadRange,
-                                atRange = actualArrivalTimeRange
-                            ), file.outputStream()
-                        )
-                    }
-                }) {
-                Text("Save to...")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        coroutineScope.launch {
+                            processManager.clearProcess()
+                            delay(10)
+                            processManager.addProcesses(
+                                generateRandomProcesses(
+                                    size = actualItemCount,
+                                    btRange = actualWorkloadRange,
+                                    atRange = actualArrivalTimeRange
+                                )
+                            )
+                        }
+                    }) {
+                    Text("Generate")
+                }
+
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        exportFromJsonFileDialog(ComposeWindow())?.let { file ->
+                            Json.encodeToStream(
+                                generateRandomProcesses(
+                                    size = actualItemCount,
+                                    btRange = actualWorkloadRange,
+                                    atRange = actualArrivalTimeRange
+                                ), file.outputStream()
+                            )
+                        }
+                    }) {
+                    Text("Save to...")
+                }
             }
         }
     }

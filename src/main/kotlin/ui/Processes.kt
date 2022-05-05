@@ -181,7 +181,7 @@ fun ProcessesScreen(
 }
 
 @Composable
-fun ProcessesHeader() {
+private fun ProcessesHeader() {
     Row(modifier = Modifier.fillMaxWidth()) {
         processColumnItems.forEach {
             Box(
@@ -205,7 +205,7 @@ fun ProcessesHeader() {
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun ProcessItem(
+private fun ProcessItem(
     index: Int,
     width: Dp,
     process: Process,
@@ -307,7 +307,7 @@ fun ProcessItem(
 }
 
 @Composable
-fun DummyProcessItem() {
+private fun DummyProcessItem() {
     Row(
         modifier = Modifier.fillMaxWidth().height(itemHeight)
     ) {
@@ -322,7 +322,7 @@ fun DummyProcessItem() {
 }
 
 @Composable
-fun ProcessAddScreen(
+private fun ProcessAddScreen(
     processState: ProcessState,
     enabled: Boolean,
     onProcessAdd: (String, Int, Int) -> Unit

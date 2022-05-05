@@ -4,8 +4,13 @@
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -13,6 +18,8 @@ import manager.CoreManager
 import manager.ProcessManager
 import schedulingalgorithm.SchedulingAlgorithmRunner
 import ui.MainScreen
+import ui.exportFromJsonFileDialog
+import ui.importFromJsonFileDialog
 import ui.state.rememberCoreState
 import ui.state.rememberGanttChartState
 import ui.state.rememberProcessState
@@ -20,6 +27,7 @@ import ui.state.rememberReadyQueueState
 import ui.state.rememberResultState
 import ui.state.rememberAlgorithmRunnerState
 
+@OptIn(ExperimentalComposeUiApi::class)
 fun main() = application {
     val coroutineScope = rememberCoroutineScope()
 
@@ -43,6 +51,7 @@ fun main() = application {
     val processManager = ProcessManager(processState)
 
     val randomProcessGeneratorWindowOpened = remember { mutableStateOf(false) }
+    val aboutWindowOpened = remember { mutableStateOf(false) }
 
     if (randomProcessGeneratorWindowOpened.value) {
         RandomProcessGenerator(processManager) {
@@ -50,13 +59,30 @@ fun main() = application {
         }
     }
 
+    if (aboutWindowOpened.value) {
+        AboutScreen {
+            aboutWindowOpened.value = false
+        }
+    }
+
     Window(
-        title = "OS Process Scheduling Simulator",
+        title = "Process Scheduling Simulator",
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(
             size = DpSize(1280.dp, 720.dp)
         )
     ) {
+        val onExport: () -> Unit = {
+            exportFromJsonFileDialog(ComposeWindow())?.let { file ->
+                processManager.exportProcessesToFile(file)
+            }
+        }
+        val onImport: () -> Unit = {
+            importFromJsonFileDialog(ComposeWindow())?.let { file ->
+                processManager.importProcessesFromFile(file)
+            }
+        }
+
         MainScreen(
             coroutineScope = coroutineScope,
             schedulingAlgorithmRunner = schedulingAlgorithmRunner,
@@ -68,7 +94,41 @@ fun main() = application {
         ) {
             randomProcessGeneratorWindowOpened.value = true
         }
+
+        MenuBar {
+            Menu(
+                text = "Process",
+                mnemonic = 'P'
+            ) {
+                Item(
+                    text = "Import process list from JSON file",
+                    onClick = onImport,
+                    shortcut = KeyShortcut(Key.I, ctrl = true)
+                )
+                Item(
+                    text = "Export process list to JSON file",
+                    onClick = onExport,
+                    shortcut = KeyShortcut(Key.E, ctrl = true)
+                )
+                Separator()
+                Item(
+                    text = "Open random process generator",
+                    onClick = {randomProcessGeneratorWindowOpened.value = true}
+                )
+            }
+
+            Menu(
+                text = "Help",
+                mnemonic = 'H'
+            ) {
+                Item(
+                    text = "About Process Scheduling Simulator",
+                    onClick = {
+                        aboutWindowOpened.value = true
+                    }
+                )
+            }
+        }
     }
 }
-
 

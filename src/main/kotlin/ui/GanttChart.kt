@@ -114,7 +114,7 @@ fun GanttChart(
 }
 
 @Composable
-fun GanttChartArrivalBar(
+private fun GanttChartArrivalBar(
     time: Int,
     accumulation: Dp,
     processes: List<Process>,
@@ -180,7 +180,7 @@ fun GanttChartArrivalBar(
 }
 
 @Composable
-fun GanttChartBar(
+private fun GanttChartBar(
     time: Int,
     accumulation: Dp,
     core: Core,
@@ -269,7 +269,7 @@ private fun GanttChartLine(
 }
 
 @Composable
-fun BoxScope.GanttChartScale(
+private fun BoxScope.GanttChartScale(
     accumulation: Dp,
     state: LazyListState
 ) {

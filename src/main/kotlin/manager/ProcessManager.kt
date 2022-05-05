@@ -25,7 +25,7 @@ class ProcessManager(
     ) {
         processes.add(
             Process(
-                pid = processes.size,
+                pid = processes.size + 1,
                 processName = processName,
                 processColor = generateRandomProcessColor(),
                 arrivalTime = processArrivalTime,

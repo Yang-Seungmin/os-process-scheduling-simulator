@@ -130,7 +130,7 @@ fun CoresScreen(
 }
 
 @Composable
-fun CoreControlPanel(
+private fun CoreControlPanel(
     modifier: Modifier = Modifier,
     coreManager: CoreManager,
     enabled: Boolean,
@@ -219,7 +219,7 @@ fun CoreControlPanel(
 }
 
 @Composable
-fun CoreInfoBox(
+private fun CoreInfoBox(
     modifier: Modifier = Modifier,
     name: String,
     value: String

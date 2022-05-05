@@ -101,7 +101,7 @@ fun ResultScreen(
 }
 
 @Composable
-fun ResultHeader(
+private fun ResultHeader(
     width: Dp
 ) {
     Row(
@@ -126,7 +126,7 @@ fun ResultHeader(
 }
 
 @Composable
-fun ResultItem(
+private fun ResultItem(
     width: Dp,
     executeResult: ExecuteResult
 ) {
@@ -161,7 +161,7 @@ fun ResultItem(
 }
 
 @Composable
-fun DummyResultItem(
+private fun DummyResultItem(
     width: Dp
 ) {
     Row(

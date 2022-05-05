@@ -20,7 +20,6 @@ repositories {
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-    implementation("io.insert-koin:koin-core:3.1.6")
 }
 
 tasks.withType<KotlinCompile> {
