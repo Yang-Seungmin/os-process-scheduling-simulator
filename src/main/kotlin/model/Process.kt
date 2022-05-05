@@ -25,3 +25,6 @@ data class Process(
 )
 
 val Process.remainWorkload get() = workload - doneWorkload
+fun Process.getResponseRatio(time: Int): Int {
+    return 1 + (time - arrivalTime) / workload
+}
