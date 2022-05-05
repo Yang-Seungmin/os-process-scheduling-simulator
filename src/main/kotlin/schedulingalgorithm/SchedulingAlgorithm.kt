@@ -65,7 +65,7 @@ abstract class SchedulingAlgorithm(
     abstract fun afterWork(time: Int)
 
     /**
-     * beforeWork function과 time 증가 코드 실행 사이에서 코어 내에 있는 프로세스의 burstTime과 donwWorkload를 계산하여 적용한다.
+     * beforeWork function과 time 증가 코드 실행 사이에서 코어 내에 있는 프로세스의 burstTime과 doneWorkload를 계산하여 적용한다.
      *
      */
     fun onWork() {
