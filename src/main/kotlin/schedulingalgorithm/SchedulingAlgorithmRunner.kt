@@ -13,6 +13,17 @@ import ui.state.CoreState
 import ui.state.ReadyQueueState
 import java.util.*
 
+/**
+ * 스케줄링 알고리즘의 작동(time이 1 증가할 때마다 적절한 함수 호출 등)에 관여하며 그에 따른 상태 변화를 관리하는 클래스
+ *
+ * @property algorithmRunnerState
+ * @property coreState
+ * @property readyQueueState
+ * @property totalPowerConsumption
+ * @property ganttChartRecord
+ * @property resultTable
+ * @property processes
+ */
 class SchedulingAlgorithmRunner(
     val algorithmRunnerState: AlgorithmRunnerState,
     private val coreState: CoreState,
