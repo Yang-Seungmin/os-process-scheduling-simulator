@@ -105,8 +105,6 @@ class SchedulingAlgorithmRunner(
                     schedulingAlgorithm.putProcessIntoReadyQueue(
                         processes.filter { it.arrivalTime == algorithmRunnerState.time }
                     )
-                    readyQueueState.readyQueue.value =
-                        algorithmRunnerState.schedulingAlgorithm.readyQueue.map { LinkedList(it) }
 
                     /*
                 2. Work를 수행하기 전(elapsed time 1 증가 전) 해야할 일 수행
@@ -137,6 +135,8 @@ class SchedulingAlgorithmRunner(
                             )
                         }
                     }
+                    readyQueueState.readyQueue.value =
+                        algorithmRunnerState.schedulingAlgorithm.readyQueue.map { LinkedList(it) }
 
                     //Work를 수행하면 시간이 1 단위만큼 증가
                     while(isPaused) yield()
