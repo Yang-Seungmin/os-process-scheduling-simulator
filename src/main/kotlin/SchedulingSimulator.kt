@@ -1,6 +1,7 @@
 // Copyright 2000-2021 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 @file:JvmName("SchedulingSimulator")
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -8,12 +9,10 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.MenuBar
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.*
 import manager.CoreManager
 import manager.ProcessManager
 import schedulingalgorithm.SchedulingAlgorithmRunner
@@ -29,6 +28,13 @@ import ui.state.rememberAlgorithmRunnerState
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() = application {
+    val mainWindowState = rememberWindowState(
+        size = DpSize(1280.dp, 720.dp)
+    )
+    val aboutWindowState = rememberWindowState(
+        size = DpSize(400.dp, Dp.Unspecified),
+
+    )
     val coroutineScope = rememberCoroutineScope()
 
     val processState = rememberProcessState()
@@ -60,7 +66,7 @@ fun main() = application {
     }
 
     if (aboutWindowOpened.value) {
-        AboutScreen {
+        AboutScreen(windowState = aboutWindowState) {
             aboutWindowOpened.value = false
         }
     }
@@ -68,9 +74,7 @@ fun main() = application {
     Window(
         title = "Process Scheduling Simulator",
         onCloseRequest = ::exitApplication,
-        state = rememberWindowState(
-            size = DpSize(1280.dp, 720.dp)
-        )
+        state = mainWindowState
     ) {
         val onExport: () -> Unit = {
             exportFromJsonFileDialog(ComposeWindow())?.let { file ->
@@ -81,6 +85,13 @@ fun main() = application {
             importFromJsonFileDialog(ComposeWindow())?.let { file ->
                 processManager.importProcessesFromFile(file)
             }
+        }
+
+        LaunchedEffect(aboutWindowOpened.value) {
+            aboutWindowState.position = WindowPosition(
+                x = mainWindowState.position.x + mainWindowState.size.width / 2 - aboutWindowState.size.width / 2,
+                y = mainWindowState.position.y + mainWindowState.size.height / 6
+            )
         }
 
         MainScreen(
