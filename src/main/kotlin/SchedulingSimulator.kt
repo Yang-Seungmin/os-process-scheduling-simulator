@@ -31,9 +31,11 @@ fun main() = application {
     val mainWindowState = rememberWindowState(
         size = DpSize(1280.dp, 720.dp)
     )
+    val randomProcessGeneratorWindowState = rememberWindowState(
+        size = DpSize(400.dp, 300.dp)
+    )
     val aboutWindowState = rememberWindowState(
         size = DpSize(400.dp, Dp.Unspecified),
-
     )
     val coroutineScope = rememberCoroutineScope()
 
@@ -60,7 +62,10 @@ fun main() = application {
     val aboutWindowOpened = remember { mutableStateOf(false) }
 
     if (randomProcessGeneratorWindowOpened.value) {
-        RandomProcessGenerator(processManager) {
+        RandomProcessGenerator(
+            processManager = processManager,
+            windowState = randomProcessGeneratorWindowState
+        ) {
             randomProcessGeneratorWindowOpened.value = false
         }
     }
@@ -94,6 +99,13 @@ fun main() = application {
             )
         }
 
+        LaunchedEffect(randomProcessGeneratorWindowOpened.value) {
+            randomProcessGeneratorWindowState.position = WindowPosition(
+                x = mainWindowState.position.x + mainWindowState.size.width / 12,
+                y = mainWindowState.position.y + mainWindowState.size.height / 12
+            )
+        }
+
         MainScreen(
             coroutineScope = coroutineScope,
             schedulingAlgorithmRunner = schedulingAlgorithmRunner,
@@ -124,7 +136,7 @@ fun main() = application {
                 Separator()
                 Item(
                     text = "Open random process generator",
-                    onClick = {randomProcessGeneratorWindowOpened.value = true}
+                    onClick = { randomProcessGeneratorWindowOpened.value = true }
                 )
             }
 

@@ -43,6 +43,12 @@ fun AboutScreen(
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.h6
             )
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = "1.0.0",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.caption
+            )
 
             Box(modifier = Modifier.height(8.dp))
 

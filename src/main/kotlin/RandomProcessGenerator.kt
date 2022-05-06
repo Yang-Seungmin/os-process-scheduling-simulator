@@ -10,6 +10,7 @@ import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -27,14 +28,13 @@ val workloadMaxRange = 1..50
 
 @Composable
 fun RandomProcessGenerator(
+    windowState: WindowState,
     processManager: ProcessManager,
     onCloseRequest: () -> Unit
 ) = Window(
     title = "Random Process Generator",
     onCloseRequest = onCloseRequest,
-    state = rememberWindowState(
-        size = DpSize(400.dp, 300.dp)
-    ),
+    state = windowState,
     alwaysOnTop = true,
     resizable = false
 ) {
