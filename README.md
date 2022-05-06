@@ -62,6 +62,15 @@ TopBarKt, ProcessKt, CoreKt, ResultTableKt, ReadyQueueChartKt, GanttChartKt 파�
 
 ### Scheduling Algorithm
 ![uml_schedulingalgorithm](https://user-images.githubusercontent.com/23609119/166936696-58ec846b-4356-45ce-92b9-4cd1e4750bb5.png)
+
+### System Properties
+
+1. P-Core, E-Core
+2. E-Core는 1초에 1의 일을 처리, 1초에 전력 1W 소모
+3. P-Core는 1초의 2의 일을 처리, 1초의 전력 3W 소모
+4. P-Core, E-Core의 대기 전력은 0.1W
+5. 1초 단위로 이루어지는 Scheduling -> P-Core에 할당된 작업의 남은 일의 양이 1이어도, 1초와 3W를 소모
+
 #### Basic 5 Scheduling Algorithms
 1. FCFS
 2. RR(Round Robin, RR Quantum can be changed)
@@ -70,32 +79,45 @@ TopBarKt, ProcessKt, CoreKt, ResultTableKt, ReadyQueueChartKt, GanttChartKt 파�
 5. HRRN
 
 #### Custom Scheduling Algorithm
-* 가정
+##### 가정
+
  1. 프로세서는 P-Core와 E-Core만 가질 수 있으며, P-Core와 E-Core의 수를 알고 있다.
  2. 프로세스의 workload, arrival time 정보를 알고 있다.
-* 목적  
-P-Core를 최대한 이용하여 입력받은 프로세스를 빠른 시간내에 끝내면서, E-Core를 이용하여 P-Core의 전력낭비를 줄이는 알고리즘을 구현한다.
-* 작동 방식  
-Ready Queue는 2개로 구성되어있으며, Main Ready Queue와 남은 workload가 1인 프로세스가 들어갈 Only One Remaining Time Process Ready Queue(이하 One Ready Queue)가 있다.  
-P-Core는 Main Ready Queue에 있는 프로세스를 우선으로 가져오며, 남은 workload가 큰 프로세스부터 가져온다. Main Ready Queue가 비어있는 경우에는 One Ready Queue에 있는 프로세스를 가져온다.
-E-Core는 One Ready Queue에 있는 프로세스를 우선으로 가져오며, One Ready Queue가 비어있는 경우에는 Main Ready Queue에서 남은 workload가 가장 작은 프로세스를 가져온다.
-P-Core에서 작업중인 프로세스의 남은 workload가 1이되면 해당 프로세스는 선점되고, One Ready Queue에 들어가게 된다.
-E-Core에서 작업중인 프로세스의 남은 workload가 1보다 큰 상태에서 One Ready Queue에 프로세스가 추가되면, E-Core에서 작업 중이던 프로세스는 선점되어 Main Ready Queue에 들어가게 된다.  
-* 결과  
-Custom Scheduling Algorithm은 E-Core가 1개이고, 다른 코어가 모두 P-Core일 때 가장 높은 효율을 가진다.  
-다른 알고리즘과 비교하였을 때 작업을 마치는 데 걸리는 총 시간은 크게 차이나지 않으면서도 낮은 전력소모를 갖는다.
 
-### System Properties
-1. P-Core, E-Core
-2. E-Core는 1초에 1의 일을 처리, 1초에 전력 1W 소모
-3. P-Core는 1초의 2의 일을 처리, 1초의 전력 3W 소모
-4. P-Core, E-Core의 대기 전력은 0.1W
-5. 1초 단위로 이루어지는 Scheduling -> P-Core에 할당된 작업의 남은 일의 양이 1이어도, 1초와 3W를 소모
+##### 목적  
+
+P-Core를 최대한 이용하여 입력받은 프로세스를 빠른 시간내에 끝내면서, E-Core를 이용하여 P-Core의 전력낭비를 줄이는 알고리즘을 구현한다.
+##### 작동 방식  
+
+1. Ready Queue는 2개로 구성되어있으며, Main Ready Queue와 남은 workload가 1인 프로세스가 들어갈 Only One Remaining Time Process Ready Queue(이하 One Ready Queue)가 있다.  
+2. P-Core는 Main Ready Queue에 있는 프로세스를 우선으로 가져오며, 남은 workload가 큰 프로세스부터 가져온다. Main Ready Queue가 비어있는 경우에는 One Ready Queue에 있는 프로세스를 가져온다.
+4. E-Core는 One Ready Queue에 있는 프로세스를 우선으로 가져오며, One Ready Queue가 비어있는 경우에는 Main Ready Queue에서 남은 workload가 가장 작은 프로세스를 가져온다.
+5. P-Core에서 작업중인 프로세스의 남은 workload가 1이되면 해당 프로세스는 선점되고, One Ready Queue에 들어가게 된다.
+6. E-Core에서 작업중인 프로세스의 남은 workload가 1보다 큰 상태에서 One Ready Queue에 프로세스가 추가되면, E-Core에서 작업 중이던 프로세스는 선점되어 Main Ready Queue에 들어가게 된다. 
+
+
+##### 결과  
+
+1. Custom Scheduling Algorithm은 E-Core가 1개이고, 다른 코어가 모두 P-Core일 때 가장 높은 효율을 가진다.  
+2. 다른 알고리즘과 비교하였을 때 작업을 마치는 데 걸리는 총 시간은 크게 차이나지 않으면서도 낮은 전력소모를 갖는다.
+
+##### Screenshots (2 P-Cores and 2 E-Cores)
+
+다른 알고리즘에 비해 Custom Scheduling Algorithm이 러닝타임이 짧으며 같은 프로세스들을 모두 해결하는데 드는 총 전력량이 적은 것을 알 수 있다.
+<p align="center"><img width="75%" alt="image" src="https://user-images.githubusercontent.com/23609119/167066249-dcccb2f7-4a5f-45bc-891e-88a6c204e0bb.png"></p>
+
+P0, P1, P4, P6, P7은 남은 Workload가 홀수여서 선점 후 One Ready Queue에 추가되는 것을 확인할 수 있다.  
+또한 One Ready Queue에 프로세스가 있어 E-Core에서 현재 작업 중인 프로세스가 선점되고 Queue에서 프로세스를 가져와 작업을 수행하는 모습을 확인할 수 있다.
+<p align="center"><img width="75%" alt="스크린샷 2022-05-06 오후 12 28 41" src="https://user-images.githubusercontent.com/23609119/167062264-28135d34-0bbe-47e3-b982-950815f4e225.png"></p>
+
+P10, P14는 P-Core가 유휴 상태일 때 E-Core에서 선점 후 P-Core에 할당되는 것을 확인할 수 있다.
+<p align="center"><img width="75%" alt="스크린샷 2022-05-06 오후 2 03 00" src="https://user-images.githubusercontent.com/23609119/167070200-99fcbc89-2a81-4d16-923f-730cc16df107.png"></p>
+
 
 ## Usage
 ### Process
 원하는 프로세스명, Arrival Time, Workload를 입력 후 Add 버튼을 눌러 프로세스를 추가할 수 있습니다.  
-Export to.. 기능으로 현재 프로세스의 상태를 json 파일로 내보낼 수 있으면 Import from.. 기능으로 json 파일로부터 프로세스의 상태를 불러올 수 있습니다.  
+Export to.. 기능으로 현재 프로세스의 상태를 json 파일로 내보낼 수 있으며 Import from.. 기능으로 json 파일로부터 프로세스의 상태를 불러올 수 있습니다.  
 <p align="center"><img width="50%" alt="스크린샷 2022-05-05 오후 10 56 19" src="https://user-images.githubusercontent.com/23609119/166939010-6592c0bc-112a-4c6e-b951-8003fb529387.png"></p>
 
 프로세스를 좌클릭하여 수정할 수 있게 만들 수 있습니다. 좌클릭한 상태에서는 좌클릭한 프로세스의 Process Name, Arrival Time, Workload를 수정할 수 있으며 우클릭을 하여 Context Menu를 열 수 있습니다.
@@ -135,8 +157,8 @@ RUN!! 버튼을 누르면 Scheduling Algorithm이 실행되며 다음과 같이 
 2. 알고리즘이 작동 중일때는 매 interval마다 현재 시간 위치로 자동 스크롤됩니다.  
 3. Arrival Time에는 각 프로세스의 Arrival Time이 깃발 형식으로 표현되어 있습니다.  
 
-Gantt Chart의 Time Scale Bar에 마우스 커서를 두고 Shift + Mouse Scroll로 특정 시간 위치로 스크롤하며 이동할 수 있습니다.
-Gantt Chart의 +, - 버튼으로 축적(accumulation)을 변경할 수 있습니다.
+Gantt Chart의 Time Scale Bar에 마우스 커서를 두고 Shift + Mouse Scroll로 특정 시간 위치로 스크롤하며 이동할 수 있습니다.  
+Gantt Chart의 +, - 버튼으로 축적(accumulation)을 변경할 수 있습니다(Known issue 3).
 <p align="center"><img width="50%" alt="May-06-2022 00-03-14" src="https://user-images.githubusercontent.com/23609119/166953480-6e891de6-ea20-4ce8-9787-a7f0ca14a57f.gif"></p>  
 
 ### Result Table
