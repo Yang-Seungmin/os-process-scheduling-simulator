@@ -44,29 +44,40 @@ fun CoresScreen(
         modifier = modifier.fillMaxWidth()
     ) {
         Row {
+            val pCoreCount = coreManager.coreState.cores.count { it is Core.PCore }
+            val eCoreCount = coreManager.coreState.cores.count { it is Core.ECore }
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = "Processor (${coreManager.coreState.cores.size})",
+                text = "Processor - " +
+                        coreManager.coreState.cores.size.let { "$it Core${if (it == 1) "" else "s"} (" } +
+                        (if (pCoreCount > 0) "$pCoreCount P-Core${if (pCoreCount == 1) "" else "s"}" else "") +
+                        (if (pCoreCount == 0 || eCoreCount == 0) "" else " and ") +
+                        (if (eCoreCount > 0) "$eCoreCount E-Core${if (eCoreCount == 1) "" else "s"}" else "") + ")",
                 style = MaterialTheme.typography.subtitle1
             )
 
-            Text(
-                modifier = Modifier.clickable(enabled) {
-                    coreManager.addCore()
-                }.padding(8.dp),
-                text = "+",
-                style = MaterialTheme.typography.subtitle1,
-                color = if (enabled) MaterialTheme.colors.primary else MaterialTheme.colors.surface
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    modifier = Modifier.clickable(enabled) {
+                        coreManager.addCore()
+                    }.padding(8.dp),
+                    text = "+",
+                    style = MaterialTheme.typography.subtitle1,
+                    color = if (enabled) MaterialTheme.colors.primary else MaterialTheme.colors.surface
+                )
 
-            Text(
-                modifier = Modifier.clickable(enabled) {
-                    coreManager.removeCore()
-                }.padding(8.dp),
-                text = "-",
-                style = MaterialTheme.typography.subtitle1,
-                color = if (enabled) MaterialTheme.colors.primary else MaterialTheme.colors.surface
-            )
+                Text(
+                    modifier = Modifier.clickable(enabled) {
+                        coreManager.removeCore()
+                    }.padding(8.dp),
+                    text = "-",
+                    style = MaterialTheme.typography.subtitle1,
+                    color = if (enabled) MaterialTheme.colors.primary else MaterialTheme.colors.surface
+                )
+            }
         }
 
         BoxWithConstraints(
