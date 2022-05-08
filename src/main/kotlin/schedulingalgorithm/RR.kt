@@ -33,7 +33,7 @@ class RR : SchedulingAlgorithm("RR") {
      *
      */
     override fun beforeWork(time: Int) {
-        cores.forEachIndexed { i, core ->
+        cores.forEach { core ->
             if (core.process == null && singleReadyQueue.isNotEmpty())
                 core.process = singleReadyQueue.poll()
         }

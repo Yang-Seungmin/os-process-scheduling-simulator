@@ -51,7 +51,7 @@ class SRTN : SchedulingAlgorithm(
      *
      */
     override fun beforeWork(time: Int) {
-        cores.forEachIndexed { i, core ->
+        cores.forEach { core ->
             if (singleReadyQueue.isNotEmpty()) {
                 if (core.process == null) core.process = pollShortestRemainingProcess()
                 else {

@@ -48,7 +48,7 @@ class HRRN : SchedulingAlgorithm(
      *
      */
     override fun beforeWork(time: Int) {
-        cores.forEachIndexed { i, core ->
+        cores.forEach { core ->
             if (core.process == null && singleReadyQueue.isNotEmpty())
                 core.process = pollHighResponseRatioProcess(time)
         }

@@ -101,7 +101,7 @@ abstract class SchedulingAlgorithm(
      * 스케줄링 알고리즘을 수행하기 전 초기화 과정
      *
      */
-    open fun init() {
+    fun init() {
         _cores.forEach {
             it.process = null
         }
