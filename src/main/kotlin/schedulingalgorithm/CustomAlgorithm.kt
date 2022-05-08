@@ -10,7 +10,7 @@ class CustomAlgorithm : SchedulingAlgorithm(
     readyQueueSize = 2
 ) {
     private val mainReadyQueue get() = readyQueue[0]
-    private val onlyOneRemainingTimeProcessReadyQueue get() = readyQueue[1]
+    private val onlyOneRemainingWorkloadReadyQueue get() = readyQueue[1]
 
     private var isEcoreInProcessor = false
 
@@ -53,7 +53,7 @@ class CustomAlgorithm : SchedulingAlgorithm(
     override fun putProcessIntoReadyQueue(processes: List<Process>) {
         processes.forEach { process ->
             if (process.remainWorkload > 1) mainReadyQueue.offer(process)
-            else onlyOneRemainingTimeProcessReadyQueue.offer(process)
+            else onlyOneRemainingWorkloadReadyQueue.offer(process)
         }
     }
 
@@ -88,13 +88,13 @@ class CustomAlgorithm : SchedulingAlgorithm(
             }
         }
         cores.filterIsInstance<Core.ECore>().forEach { core ->
-            if (onlyOneRemainingTimeProcessReadyQueue.isNotEmpty()) {
+            if (onlyOneRemainingWorkloadReadyQueue.isNotEmpty()) {
                 if (core.process == null) {
-                    core.process = pollShortestRemainingProcess(queue = onlyOneRemainingTimeProcessReadyQueue)
+                    core.process = pollShortestRemainingProcess(queue = onlyOneRemainingWorkloadReadyQueue)
                 } else {
                     if (core.process!!.remainWorkload > 1) {
                         mainReadyQueue.offer(core.process)
-                        core.process = onlyOneRemainingTimeProcessReadyQueue.poll()
+                        core.process = onlyOneRemainingWorkloadReadyQueue.poll()
                     }
                 }
             } else if (mainReadyQueue.isNotEmpty()) {
@@ -104,9 +104,9 @@ class CustomAlgorithm : SchedulingAlgorithm(
             }
         }
         cores.filterIsInstance<Core.PCore>().forEach { core ->
-            if (onlyOneRemainingTimeProcessReadyQueue.isNotEmpty() && mainReadyQueue.isEmpty()) {
+            if (onlyOneRemainingWorkloadReadyQueue.isNotEmpty() && mainReadyQueue.isEmpty()) {
                 if (core.process == null) {
-                    core.process = pollLongestRemainingProcess(queue = onlyOneRemainingTimeProcessReadyQueue)
+                    core.process = pollLongestRemainingProcess(queue = onlyOneRemainingWorkloadReadyQueue)
                 }
             }
         }
@@ -124,7 +124,7 @@ class CustomAlgorithm : SchedulingAlgorithm(
             if (core is Core.PCore) {
                 core.process?.let { process ->
                     if (isEcoreInProcessor && process.remainWorkload == 1) {
-                        onlyOneRemainingTimeProcessReadyQueue.offer(process)
+                        onlyOneRemainingWorkloadReadyQueue.offer(process)
                         core.process = null
                     }
                 }
