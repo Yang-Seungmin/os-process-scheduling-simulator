@@ -8,16 +8,11 @@ class RR : SchedulingAlgorithm("RR") {
     var rrQuantum = 2
     private val resideTimes = mutableMapOf<Core, Pair<Process?, Int>>() //각 core의 특정 Process 실행 시간을 위한 member
 
-    override fun init() {
-        super.init()
+    override fun beforeStart() {
         resideTimes.clear()
         cores.forEach { core ->
             resideTimes[core] = (null to 0)
         }
-    }
-
-    override fun beforeStart() {
-        //Do nothing
     }
 
     /**

@@ -5,7 +5,7 @@ package model
  *
  * @property process 프로세스
  * @property core 프로세스가 점유하고 있는 코어
- * @property time 프로세스가 점유하기 시작한 시간/끝난 시간 (start inclusive and end inclusive)
+ * @property time 프로세스가 코어를 점유하기 시작한 시간 ~ 끝난 시간 (start inclusive and end inclusive)
  */
 data class GanttChartItem(
     val process: Process,
