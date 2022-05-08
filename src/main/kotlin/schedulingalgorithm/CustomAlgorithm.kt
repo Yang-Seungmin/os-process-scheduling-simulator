@@ -90,7 +90,7 @@ class CustomAlgorithm : SchedulingAlgorithm(
         cores.filterIsInstance<Core.ECore>().forEach { core ->
             if (onlyOneRemainingWorkloadReadyQueue.isNotEmpty()) {
                 if (core.process == null) {
-                    core.process = pollShortestRemainingProcess(queue = onlyOneRemainingWorkloadReadyQueue)
+                    core.process = onlyOneRemainingWorkloadReadyQueue.poll()
                 } else {
                     if (core.process!!.remainWorkload > 1) {
                         mainReadyQueue.offer(core.process)
@@ -106,7 +106,7 @@ class CustomAlgorithm : SchedulingAlgorithm(
         cores.filterIsInstance<Core.PCore>().forEach { core ->
             if (onlyOneRemainingWorkloadReadyQueue.isNotEmpty() && mainReadyQueue.isEmpty()) {
                 if (core.process == null) {
-                    core.process = pollLongestRemainingProcess(queue = onlyOneRemainingWorkloadReadyQueue)
+                    core.process = onlyOneRemainingWorkloadReadyQueue.poll()
                 }
             }
         }
